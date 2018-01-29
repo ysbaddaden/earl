@@ -1,0 +1,16 @@
+name: earl
+version: 0.1.0
+
+authors:
+  - Julien Portalier <julien@portalier.com>
+
+description: |
+  Actor library for Crystal.
+
+development_dependencies:
+  minitest:
+    github: ysbaddaden/minitest.cr
+
+crystal_version: 0.24.1
+
+license: MIT
