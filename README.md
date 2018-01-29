@@ -358,3 +358,8 @@ a supervisor of specific actors, so it may be redundant to supervise them too.
 
 Probably Inspired by my very limited knowledge of
 [Celluloid](https://celluloid.io/) and Erlang OTP.
+
+
+## License
+
+Distributed under the Apache Software License 2.0. See LICENSE for details.
