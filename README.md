@@ -18,7 +18,7 @@ pool of workers to dispatch work to; if so, then Earl is for you.
 Earl is still in its infancy, but should be faily useable already.
 
 If you believe Earl could help structure your application(s) please try it
-and report any shortcomings or bugs (or successes) you may have found!
+and report any shortcomings, bugs or successes you may have found!
 
 
 ## Usage
@@ -38,6 +38,149 @@ require selected components, for example actors and mailboxes:
 require "earl/actor"
 require "earl/mailbox"
 ```
+
+For a formal depiction of the Earl library, you'll may want to keep reading the
+*Rationale* section below. For a simpler introduction filled with examples, you
+should skip down to the *Getting Started* section instead.
+
+
+## Rationale
+
+Earl actors are a set of modules that can be mixed into classes.
+
+The `Earl::Actor` module is the foundation module. It structures how the object
+will be started (`#start` or `#spawn`), stopped (`#stop`) and recycled
+(`#recycle`). Each actor has an associated `Actor::State` accessible as `state`
+that is maintained throughout the actor's lifetime, and a number of hook methods
+that will be executed on certain state transitions (namely `#call`,
+`#terminate`, `#reset` and `#trap`).
+
+An actor must implement the `#call` method. This method is the actor's main
+activity, and will be executed exactly once when the actor is started. An actor
+may execute a single action then return, which will stop the actor, or run a
+loop that must be exited when the actor's state changed, to properly stop it.
+
+When the `#call` method returns the actor will be stopped properly, calling the
+`#terminate` method hook that an actor may override to execute actions on
+stop. If the `#call` method raises an exception, the actor will enter the
+crashed state, and `#terminate` won't be called.
+
+Actors shouldn't rescue all exceptions but only the expected noise (e.g. broken
+pipe) and let the actor crash otherwise, allowing to bubble the crashed
+information to other actors that can react on it, which is achieved by linking
+two actors together.
+
+Actors can be started with `#start` which will block until the actor stops.
+Alternatively they may be started concurrently (in their own fiber) with
+`#spawn` which will return immediately.
+
+Actors can be linked to another actor when they're started, using the optional
+`link` argument to `#start` (and `#spawn`). For example the actor A starts the
+actor B and links itself to it, so whenever B stops or crashes, A's `#trap`
+method will be called, passing the actor object and the exception if it crashed
+(`nil` if it stopped). Supervisors and pools rely on links to restart the actors
+they supervise for instance.
+
+Actors can be asked to stop gracefully with `#stop`. Actors are responsible for
+exiting swiftly when asked to stop, for example breaking out of a loop with
+`while running?` or `while m = receive?` if the actor has a mailbox.
+
+Eventually, a stopped or crashed actor may be recycled with `#recycle`. Actors
+meant to be recycled must override the `#reset` method hook to return their
+internal state to their initial values, as if they had just been initialized, so
+a recycled object can be retarted any time.
+
+---
+
+Developers are encouraged to override the hook methods (`#call`, `#terminate`,
+`#reset` and `#trap`) at will, but discouraged to override `Earl::Actor` methods
+that control the actor state (`#start`, `#spawn`, `#stop` and `#recycle`),
+unless they're writing extension modules, in which case they must override the
+later methods, making sure to call `super`, so the hook methods are left empty
+for developers to override without having to think about calling `super`.
+
+Extension modules should follow the structure and design of existing actors and
+extensions, to avoid introducing conflicting patterns (namings, hooks, methods).
+
+---
+
+The `Earl::Mailbox(M)` module is an extension module; it should only be included
+in classes that already include `Earl::Actor`. The mailbox module is generic and
+the type of messages the actor can receive, `M`, must be specified. Internally
+it merely wraps a `Channel(M)` accessible as `#mailbox`, and delegates the
+`#send`, `#receive` and `#receive?` on the actor itself to the channel.
+Externally, the actor behaves just like it was itself a channel.
+
+The mailbox will be closed when the actor stops, but will remain open if the
+actor crashes. A linked actor (e.g. an `Earl::Supervisor`) may recycle and
+restart an actor, and resume consuming buffered messages in the mailbox. An
+actor running a loop may simple assume `receive?` to return `nil` and exit the
+loop when that happens, without having to check for `running?`.
+
+Despite having direct accessors to the mailbox, external actors are supposed to
+behave properly and not tinker with it, except for very good reasons. For
+example the mailbox may be swapped in place with `#mailbox=`; in that case the
+channel won't be closed when the actor stops. For example `Earl::Pool` relies on
+this to share a common channel across all its worker actors.
+
+---
+
+The `Earl::Registry(A, M)` module is an extension module; it should only be
+included in classes that already include `Earl::Actor`. The registry module is
+generic and both the type of actors to register, `A`, and messages to send them,
+`M`, must be specified. Registered actors `A` must also be actors, thus include
+`Earl::Actor`, but also `include `Earl::Mailbox(M)` so they can be sent the
+expected messages. The module makes the registry object accessible as
+`#registry` and delegates the `#register` and `#unregister` methods to it.
+
+The registry maintains a list of registered actors. These actors may register or
+unregister themselves at any time; the registry object is concurrency safe,
+actors may register and unregister at any time, while messages are being sent.
+The registry will be closed when the main actor stops; trying to register an
+actor while the registry is closed will raise an `Earl::ClosedError` exception.
+
+The producer actor, the one with the registry, may broadcast messages using
+`#registry.send` to all previously registered actors in an exactly-once manner.
+Newly registered actors will only receive messages sent *after* their
+registration, and never receive messages previously broadcasted. If an exception
+is raised while trying to send a message to a registered actor, that actor will
+be unregistered —the likely reason being the actor's mailbox was closed.
+
+---
+
+The `Earl::Supervisor` class is an actor that starts then monitors previously
+intialized actors. Supervisors may monitor any type of actor, as long as they
+include `Earl::Actor`—so supervisors may supervise other supervisors.
+
+Supervisors start each actor within their own fiber, recycling and restarting
+the actor if they ever crashes, and keep them stopped if they stopped properly,
+that is until the supervisor itself is recycled and restarted, that will
+restart all supervised actors.
+
+---
+
+The `Earl::Pool(A, M)` class is an actor that will initialize, start then
+monitor a fixed-size pool of actors of type `A` that must include `Earl::Actor`
+as well as `Earl::Mailbox(M)` to receive expected messages.
+
+The pool starts each worker (`A` actors) in its own fiber. If a worker crashes,
+it will be recycled and restarted. Workers aren't expected to stop by
+themselves, unless the pool itself is stopping, which in turn asked all workers
+to stop.
+
+The pool implements a single `#send` method that will dispatch the message to a
+single worker in a exactly-once manner. Messages aren't saved and can't be
+acknowledged; if a worker crashes while processing a message, the message will
+be lost. Nevertheless, the pool's channel shall only be closed when the pool is
+stopped, and workers are expected to gracefully handle pending messages. These
+pending messages should never be lost because a worker crashed or the pool is
+goind down, unless workers exit swiftly once their state changes and discard
+pending messages.
+
+If a pool is itself supervised by an `Earl::Supervisor` actor, and the pool
+crashes, the supervisor will recycle and restart it, with the original channel
+kept open, so pending messages will be processed once the pool workers are
+started.
 
 
 ## Getting Started
@@ -92,7 +235,7 @@ do_something_else_concurrently
 
 Depending on the context, it may be useful to block the current fiber, for
 example if a library already spawned a dedicated fiber (e.g. `HTTP::Server`
-requests); sometimes wel need to start services in the background instead, and
+requests); sometimes we need to start services in the background instead, and
 continue on with something else.
 
 #### Stop Actors
@@ -145,14 +288,14 @@ class B
 end
 
 a = A.new
-B = B.new
+b = B.new
 
-a = a.start
+a.start
 b.start(link: a)
 ```
 
 The `Earl::Supervisor` and `Earl::Pool` actors use links and traps to keep
-services alive, for example.
+services alive for example.
 
 #### Recycle Actors
 
