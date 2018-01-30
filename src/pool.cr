@@ -19,6 +19,7 @@ module Earl
           @mutex.synchronize { @actors << actor }
 
           while actor.starting?
+            Earl.logger.info "#{self.class.name} starting worker[#{actor.object_id}]"
             actor.mailbox = @channel
             actor.start(link: self)
           end
@@ -35,10 +36,16 @@ module Earl
 
     def trap(actor : A, exception : Exception?) : Nil
       if exception
-        Earl.logger.debug "#{self.class.name} worker failed message=#{exception.message} (#{exception.class.name})"
+        Earl.logger.error "#{self.class.name} worker[#{actor.object_id}] crashed message=#{exception.message} (#{exception.class.name})"
         return actor.recycle if running?
       end
-      @mutex.synchronize { @actors.delete(actor) }
+
+      if actor.running?
+        Earl.logger.warn "#{self.class.name} worker[#{actor.object_id}] stopped unexpectedly"
+        return actor.recycle
+      else
+        @mutex.synchronize { @actors.delete(actor) }
+      end
     end
 
     def send(message : M) : Nil
