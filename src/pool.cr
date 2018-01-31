@@ -1,13 +1,12 @@
 require "mutex"
-require "./actor"
+require "./artist"
 
 module Earl
   class Pool(A, M)
-    include Actor
+    include Artist(M)
 
     def initialize(@capacity : Int32)
-      @actors = Array(A).new(@capacity)
-      @channel = Channel(M).new
+      @workers = Array(A).new(@capacity)
       @mutex = Mutex.new
       @fiber = nil
     end
@@ -15,13 +14,13 @@ module Earl
     def call : Nil
       @capacity.times do
         spawn do
-          actor = A.new
-          @mutex.synchronize { @actors << actor }
+          agent = A.new
+          @mutex.synchronize { @workers << agent }
 
-          while actor.starting?
-            Earl.logger.info "#{self.class.name} starting worker[#{actor.object_id}]"
-            actor.mailbox = @channel
-            actor.start(link: self)
+          while agent.starting?
+            Earl.logger.info "#{self.class.name} starting worker[#{agent.object_id}]"
+            agent.mailbox = mailbox
+            agent.start(link: self)
           end
         end
       end
@@ -29,35 +28,29 @@ module Earl
       @fiber = Fiber.current
       Scheduler.reschedule
 
-      until @actors.empty?
+      until @workers.empty?
         Fiber.yield
       end
     end
 
-    def trap(actor : A, exception : Exception?) : Nil
+    def trap(agent : A, exception : Exception?) : Nil
       if exception
-        Earl.logger.error "#{self.class.name} worker[#{actor.object_id}] crashed message=#{exception.message} (#{exception.class.name})"
-        return actor.recycle if running?
+        Earl.logger.error "#{self.class.name} worker[#{agent.object_id}] crashed message=#{exception.message} (#{exception.class.name})"
+        return agent.recycle if running?
       end
 
-      if actor.running?
-        Earl.logger.warn "#{self.class.name} worker[#{actor.object_id}] stopped unexpectedly"
-        return actor.recycle
+      if agent.running?
+        Earl.logger.warn "#{self.class.name} worker[#{agent.object_id}] stopped unexpectedly"
+        return agent.recycle
       else
-        @mutex.synchronize { @actors.delete(actor) }
+        @mutex.synchronize { @workers.delete(agent) }
       end
-    end
-
-    def send(message : M) : Nil
-      @channel.send(message)
     end
 
     def terminate : Nil
-      @channel.close
-
-      @actors.each do |actor|
+      @workers.each do |agent|
         begin
-          actor.stop
+          agent.stop
         rescue ex
         end
       end

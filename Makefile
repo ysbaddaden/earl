@@ -5,8 +5,9 @@ CRFLAGS =
 
 all: test
 
-docs: PHONY
-	$(CRYSTAL) docs
+doc: PHONY
+	@mkdir -p doc
+	cd doc && markdown ../SPEC.md > SPEC.html
 
 test: PHONY
 	$(CRYSTAL) run $(CRFLAGS) test/*_test.cr -- $(ARGS)

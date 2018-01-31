@@ -1,9 +1,7 @@
-require "../src/pool"
-require "../src/mailbox"
+require "../src/earl"
 
 class Worker
-  include Earl::Actor
-  include Earl::Mailbox(Int32)
+  include Earl::Artist(Int32)
 
   @@next_id = Atomic(Int32).new(1)
   getter id : Int32
@@ -12,12 +10,10 @@ class Worker
     @id = @@next_id.add(1)
   end
 
-  def call
-    while m = receive?
-      puts "Worker(#{id}): received #{m}"
-      sleep rand(0.1..0.2)
-      raise "chaos monkey" if rand(0..9) == 1
-    end
+  def call(message)
+    puts "Worker(#{id}): received #{message}"
+    sleep rand(0.1..0.2)
+    raise "chaos monkey" if rand(0..9) == 1
   end
 end
 

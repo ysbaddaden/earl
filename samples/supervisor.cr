@@ -3,21 +3,18 @@ require "../src/earl"
 alias Message = Int32
 
 class Consumer
-  include Earl::Actor
-  include Earl::Mailbox(Message)
+  include Earl::Artist(Message)
 
   def initialize(@id : Int32)
   end
 
-  def call
-    while message = receive?
-      puts "client id=#{@id} received=#{message} (#{message.class.name})"
-    end
+  def call(message)
+    puts "client id=#{@id} received=#{message} (#{message.class.name})"
   end
 end
 
 class Producer
-  include Earl::Actor
+  include Earl::Agent
   include Earl::Registry(Consumer, Message)
 
   def initialize
