@@ -67,8 +67,9 @@ different methods for control-flow and communication, among other things.
   If an agent is linked using `#start(link: agent)` then the linked agent's
   `#trap` hook method will be invoked whenever the started agent stops or
   crashes, passing the agent object and the exception object if the agent
-  crashed. `Earl::Supervisor` and `Earl::Pool` use links to supervise agents,
-  for example, logging errors and deciding to recycle them or let them stopped.
+  crashed. [`Earl::Supervisor`](#earlsupervisor) and [`Earl::Pool`](#earlpool)
+  use links to supervise agents for example, logging errors and deciding to
+  recycle them or let them stopped.
 
 - `#spawn(*, link = nil)`
 
@@ -187,9 +188,10 @@ end
 
 ## Earl::Artist
 
-The `Earl::Artist(M)` module is an `Earl::Agent` with an `Earl::Mailbox(M)` that
-implements the `#call` hook to loop on received messages then call
-`#call(message)` overload methods that the artist must implement.
+The `Earl::Artist(M)` module is an [`Earl::Agent`](#earlagent) with an
+[`Earl::Mailbox(M)`](#earlmailbox) that implements the `#call` hook to loop on
+received messages then call `#call(message)` overload methods that the artist
+must implement.
 
 The artist may have as many `#call(message)` overloads as needed; a single
 overload or as many as the `M` union type defines for example.
@@ -246,16 +248,17 @@ extensions, to avoid introducing conflicting patterns (namings, hooks, methods).
 ### Earl::Mailbox
 
 The `Earl::Mailbox(M)` module is an extension module; it should only be included
-in classes that already include `Earl::Agent`. The mailbox module is generic and
-the type of messages the agent can receive (`M`) must be specified.
+in classes that already include [`Earl::Agent`](#earlagent). The mailbox module
+is generic and the type of messages the agent can receive (`M`) must be
+specified.
 
 Messages will be received by the agent in sequential order.
 
 The mailbox will be closed when the agent stops, but will remain open if the
-agent crashes. A linked agent (e.g. an `Earl::Supervisor`) may recycle and
-restart an agent, and resume consuming buffered messages in the mailbox. An
-agent running a loop may simple assume `receive?` to return `nil` and exit the
-loop when that happens, without having to check for `running?`.
+agent crashes. A linked agent (e.g. an [`Earl::Supervisor`](#earlsupervisor))
+may recycle and restart an agent, and resume consuming buffered messages in the
+mailbox. An agent running a loop may simple assume `receive?` to return `nil`
+and exit the loop when that happens, without having to check for `running?`.
 
 - `#mailbox`
 
@@ -268,7 +271,8 @@ loop when that happens, without having to check for `running?`.
   is now considered to be shared.
 
   Despite having direct accessors to the mailbox, external agents aren't
-  supposed to tinker with it, except for very good reasons (see `Earl::Pool`).
+  supposed to tinker with it, except for very good reasons (see
+  [`Earl::Pool`](#earlpool)).
 
 - `#send(message)`
 
@@ -319,11 +323,11 @@ printer.start
 ### Earl::Registry
 
 The `Earl::Registry(A, M)` module is an extension module; it should only be
-included in classes that already include `Earl::Agent`. The registry module is
-generic and both the type of agents to register, `A`, and messages to send them,
-`M`, must be specified. Registered agents `A` must also be agents, thus include
-`Earl::Agent`, but also include `Earl::Mailbox(M)` so they can be sent the
-expected messages.
+included in classes that already include [`Earl::Agent`](#earlagent). The
+registry module is generic and both the type of agents to register, `A`, and
+messages to send them, `M`, must be specified. Registered agents `A` must also
+be agents, thus include [`Earl::Agent`](#earlagent), but also include
+[`Earl::Mailbox(M)`](#earlmailbox) so they can be sent the expected messages.
 
 The registry maintains a list of registered agents. The registry object is
 concurrency safe, agents may register and unregister at any time, while messages
@@ -438,7 +442,8 @@ stopped or recycled as needed.
 
 The `Earl::Supervisor` class is an agent that starts then monitors previously
 intialized agents. Supervisors may monitor any type of agent, as long as they
-include `Earl::Agent` —so supervisors may supervise other supervisors.
+include [`Earl::Agent`](#earlagent) —so supervisors may supervise other
+supervisors.
 
 Supervisors start each agent within their own fiber, recycling and restarting
 the agent if they ever crashes, but keep them stopped if they stopped properly,
@@ -483,19 +488,20 @@ supervisor.start
 
 ### Earl::Pool
 
-The `Earl::Pool(A, M)` class is an agent that will initialize, start then
-monitor a fixed-size pool of agents of type `A` that must include `Earl::Agent`
-and `Earl::Mailbox(M)` to receive messages (jobs).
+The `Earl::Pool(A, M)` class is an artist that will initialize, start then
+monitor a fixed-size pool of agents of type `A` that must include
+[`Earl::Agent`](#earlagent) and [`Earl::Mailbox(M)`](#earlmailbox) to receive
+messages (jobs).
 
 The pool starts each worker (`A` agents) in their own fiber. If a worker
 crashes, it will be recycled and restarted. Workers aren't expected to stop by
 themselves, unless the pool itself is stopping, which in turn asked all workers
 to stop.
 
-If a pool is itself supervised by an `Earl::Supervisor` agent, and the pool
-crashes, the supervisor will recycle and restart it, with the original channel
-kept open, so pending messages will be dispatched once the pool workers are
-started.
+If a pool is itself supervised by an [`Earl::Supervisor`](#earlsupervisor)
+agent, and the pool crashes, the supervisor will recycle and restart it, with
+the original channel kept open, so pending messages will be dispatched once the
+pool workers are started.
 
 - `.new(capacity)`
 
