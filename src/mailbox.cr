@@ -7,7 +7,7 @@ module Earl
     end
 
     def mailbox : Channel(M)
-      @mailbox ||= Channel(M).new
+      @mailbox ||= Channel::Buffered(M).new
     end
 
     def mailbox=(@mailbox : Channel(M))

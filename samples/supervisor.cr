@@ -51,7 +51,7 @@ end
 
 Signal::INT.trap do
   if supervisor.stopping?
-    Earl.logger.warn "forced interruption"
+    puts "forced interruption"
     exit 1
   else
     supervisor.stop

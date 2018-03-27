@@ -18,7 +18,7 @@ module Earl
           @mutex.synchronize { @workers << agent }
 
           while agent.starting?
-            Earl.logger.info "#{self.class.name} starting worker[#{agent.object_id}]"
+            log.info { "starting worker ##{agent.object_id}" }
             agent.mailbox = mailbox
             agent.start(link: self)
           end
@@ -35,12 +35,12 @@ module Earl
 
     def trap(agent : A, exception : Exception?) : Nil
       if exception
-        Earl.logger.error "#{self.class.name} worker[#{agent.object_id}] crashed message=#{exception.message} (#{exception.class.name})"
+        log.error { "worker ##{agent.object_id} crashed message=#{exception.message} (#{exception.class.name})" }
         return agent.recycle if running?
       end
 
       if agent.running?
-        Earl.logger.warn "#{self.class.name} worker[#{agent.object_id}] stopped unexpectedly"
+        log.warn { "worker ##{agent.object_id} stopped unexpectedly" }
         return agent.recycle
       else
         @mutex.synchronize { @workers.delete(agent) }

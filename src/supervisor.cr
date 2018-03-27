@@ -4,6 +4,7 @@ require "./agent"
 module Earl
   class Supervisor
     include Agent
+    include Logger
 
     def initialize
       @agents = [] of Agent
@@ -35,7 +36,7 @@ module Earl
 
     def trap(agent : Agent, exception : Exception?) : Nil
       if exception
-        Earl.logger.error "#{agent.class.name} failed message=#{exception.message} (#{exception.class.name})"
+        log.error { "#{agent.class.name} crashed message=#{exception.message} (#{exception.class.name})" }
         agent.recycle
       else
         @done.send(nil)

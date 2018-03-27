@@ -136,15 +136,14 @@ end
 
 class B
   include Earl::Agent
+  include Earl::Logger
 
   def call
     # ...
   end
 
   def trap(agent, exception = nil)
-    if exception
-      Earl.logger.error "#{agent} crashed with #{exception.message}"
-    end
+    log.error("crashed with #{exception.message}") if exception
   end
 end
 

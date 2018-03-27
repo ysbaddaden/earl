@@ -1,14 +1,14 @@
-require "../src/artist"
+require "../src/earl"
 
 class Foo
   include Earl::Artist(Int32 | String)
 
   def call(message : String)
-    p [:string, message]
+    log.info [:string, message].inspect
   end
 
   def call(message : Int32)
-    p [:number, message]
+    log.info { [:number, message].inspect }
   end
 end
 
@@ -35,6 +35,7 @@ bar.spawn
 
 5.times do |i|
   bar.send(i)
+  Fiber.yield
 end
 
 foo.stop

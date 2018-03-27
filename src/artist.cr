@@ -5,6 +5,7 @@ module Earl
   module Artist(M)
     macro included
       include Earl::Agent
+      include Earl::Logger
       include Earl::Mailbox(M)
 
       def call
