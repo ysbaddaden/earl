@@ -15,6 +15,7 @@ module Earl
     end
 
     def send(message : M)
+      raise ClosedError.new if mailbox.closed?
       mailbox.send(message)
     end
 

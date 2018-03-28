@@ -20,8 +20,9 @@ module Earl
       end
     end
 
-    def spawn(*, link : Agent? = nil) : Nil
+    def spawn(*, link : Agent? = nil, _yield = true) : Nil
       ::spawn { start(link: link) }
+      Fiber.yield if _yield
     end
 
     abstract def call : Nil

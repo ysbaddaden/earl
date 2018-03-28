@@ -80,7 +80,7 @@ module Earl
     def test_spawn
       agent = StatusAgent.new
 
-      agent.spawn
+      agent.spawn(_yield: false)
       refute agent.running?
 
       sleep(0)

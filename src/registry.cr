@@ -40,6 +40,8 @@ module Earl
             unregister(agent) unless closed?
           end
         end
+
+        Fiber.yield
       end
 
       def each
@@ -56,7 +58,9 @@ module Earl
 
       def stop
         @mutex.synchronize { @closed = true }
-        @subscriptions.each(&.stop)
+        @subscriptions.each do |agent|
+          agent.stop rescue nil
+        end
         @subscriptions.clear
       end
 

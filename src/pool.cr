@@ -36,23 +36,20 @@ module Earl
     def trap(agent : A, exception : Exception?) : Nil
       if exception
         log.error { "worker ##{agent.object_id} crashed message=#{exception.message} (#{exception.class.name})" }
-        return agent.recycle if running?
+      elsif agent.running?
+        log.warn { "worker ##{agent.object_id} stopped unexpectedly" }
       end
 
-      if agent.running?
-        log.warn { "worker ##{agent.object_id} stopped unexpectedly" }
+      if running?
         return agent.recycle
-      else
-        @mutex.synchronize { @workers.delete(agent) }
       end
+
+      @mutex.synchronize { @workers.delete(agent) }
     end
 
     def terminate : Nil
       @workers.each do |agent|
-        begin
-          agent.stop
-        rescue ex
-        end
+        agent.stop rescue nil
       end
 
       if fiber = @fiber

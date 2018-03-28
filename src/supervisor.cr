@@ -38,9 +38,10 @@ module Earl
       if exception
         log.error { "#{agent.class.name} crashed message=#{exception.message} (#{exception.class.name})" }
         agent.recycle
-      else
-        @done.send(nil)
+      elsif !@done.closed?
+        return @done.send(nil)
       end
+      Fiber.yield
     end
 
     def terminate : Nil
