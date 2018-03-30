@@ -22,8 +22,8 @@ module Earl
 
     def call : Nil
       @agents.each do |agent|
-        spawn do
-          while agent.starting?
+        ::spawn do
+          while running? && agent.starting?
             agent.start(link: self)
           end
         end
@@ -47,7 +47,7 @@ module Earl
 
     def terminate : Nil
       @agents.reverse_each do |agent|
-        agent.stop # if agent.running?
+        agent.stop if agent.running?
       end
       @done.close
     end
