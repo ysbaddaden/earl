@@ -1,4 +1,5 @@
 require "../src/earl"
+Earl.application.spawn
 
 alias Message = Int32
 

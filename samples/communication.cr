@@ -1,4 +1,5 @@
 require "../src/earl"
+Earl.application.spawn
 
 class Foo
   include Earl::Artist(Int32 | String)

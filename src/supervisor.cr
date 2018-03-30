@@ -45,7 +45,9 @@ module Earl
     end
 
     def terminate : Nil
-      @agents.each(&.stop)
+      @agents.reverse_each do |agent|
+        agent.stop # if agent.running?
+      end
       @done.close
     end
 

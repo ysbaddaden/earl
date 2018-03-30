@@ -1,14 +1,11 @@
 require "./logger/actor"
 require "./logger/console_backend"
-require "./supervisor"
+require "./application"
 
 module Earl
   module Logger
     @@logger = Logger::Actor.new(Severity::INFO, ConsoleBackend.new(STDOUT))
-
-    @@supervisor = Supervisor.new
-    @@supervisor.monitor(@@logger)
-    @@supervisor.spawn
+    Earl.application.monitor(@@logger)
 
     def self.level : Severity
       @@logger.level

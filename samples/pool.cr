@@ -1,4 +1,5 @@
 require "../src/earl"
+Earl.application.spawn
 
 class Worker
   include Earl::Artist(Int32)
