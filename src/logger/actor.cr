@@ -17,6 +17,7 @@ module Earl
 
       def initialize(@level, backend : Backend)
         @backends = [backend] of Backend
+        @close_mailbox_on_close = false
       end
 
       def call : Nil
@@ -34,6 +35,12 @@ module Earl
           Severity::{{name.id}} >= @level
         end
       {% end %}
+
+      def terminate
+        until mailbox.empty?
+          Fiber.yield
+        end
+      end
     end
   end
 end
