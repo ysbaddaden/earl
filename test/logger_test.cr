@@ -73,10 +73,10 @@ module Earl
           loggy.log.error("error message")
         end
 
-        refute_match /D \[.+\] Noop .+ debug message/, log
-        assert_match /I \[.+\] Noop .+ informational message/, log
-        assert_match /W \[.+\] Loggy .+ warning message/, log
-        assert_match /E \[.+\] Loggy .+ error message/, log
+        refute_match /D \[.+\] Noop debug message/, log
+        assert_match /I \[.+\] Noop informational message/, log
+        assert_match /W \[.+\] Loggy warning message/, log
+        assert_match /E \[.+\] Loggy error message/, log
       end
 
       with_level Logger::Severity::SILENT do
@@ -93,10 +93,10 @@ module Earl
           loggy.log.error("error message")
         end
 
-        refute_match /D \[.+\] Loggy .+ debug message/, log
-        refute_match /I \[.+\] Noop .+ informational message/, log
-        refute_match /W \[.+\] Loggy .+ warning message/, log
-        refute_match /E \[.+\] Loggy .+ error message/, log
+        refute_match /D \[.+\] Loggy debug message/, log
+        refute_match /I \[.+\] Noop informational message/, log
+        refute_match /W \[.+\] Loggy warning message/, log
+        refute_match /E \[.+\] Loggy error message/, log
       end
 
       with_level Logger::Severity::ERROR do
@@ -113,10 +113,10 @@ module Earl
           Logger.error(noop) { "error message" }
         end
 
-        refute_match /D \[.+\] Loggy .+ debug message/, log
-        refute_match /I \[.+\] Noop .+ informational message/, log
-        refute_match /W \[.+\] Loggy .+ warning message/, log
-        assert_match /E \[.+\] Noop .+ error message/, log
+        refute_match /D \[.+\] Loggy debug message/, log
+        refute_match /I \[.+\] Noop informational message/, log
+        refute_match /W \[.+\] Loggy warning message/, log
+        assert_match /E \[.+\] Noop error message/, log
       end
     end
 

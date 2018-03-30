@@ -17,8 +17,6 @@ module Earl
         io << Process.pid
         io << "] "
         io << agent.class.name
-        io << " #"
-        io << agent.object_id
         io << " "
         io.puts message
       end
