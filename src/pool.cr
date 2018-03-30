@@ -35,7 +35,8 @@ module Earl
 
     def trap(agent : A, exception : Exception?) : Nil
       if exception
-        log.error { "worker ##{agent.object_id} crashed message=#{exception.message} (#{exception.class.name})" }
+        Logger.error(agent, exception)
+        log.error { "worker ##{agent.object_id} crashed (#{exception.class.name})" }
       elsif agent.running?
         log.warn { "worker ##{agent.object_id} stopped unexpectedly" }
       end

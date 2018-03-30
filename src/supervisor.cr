@@ -36,7 +36,8 @@ module Earl
 
     def trap(agent : Agent, exception : Exception?) : Nil
       if exception
-        log.error { "#{agent.class.name} crashed message=#{exception.message} (#{exception.class.name})" }
+        Logger.error(agent, exception)
+        log.error { "#{agent.class.name} crashed (#{exception.class.name})" }
         agent.recycle
       elsif !@done.closed?
         return @done.send(nil)

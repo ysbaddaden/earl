@@ -43,6 +43,22 @@ module Earl
       {% end %}
     {% end %}
 
+    def self.error(agent : Agent, ex : Exception)
+      error(agent) do
+        String.build do |str|
+          str << ex.class.name
+          str << ": "
+          str << ex.message
+          str << " at "
+          str.puts ex.backtrace.first?
+          ex.backtrace.each do |line|
+            str << "  "
+            str.puts line
+          end
+        end
+      end
+    end
+
     struct Log
       def initialize(@agent : Agent)
       end
@@ -64,6 +80,10 @@ module Earl
           end
         {% end %}
       {% end %}
+
+      def error(ex : Exception)
+        Logger.error(@agent, ex)
+      end
     end
 
     def log : Log
