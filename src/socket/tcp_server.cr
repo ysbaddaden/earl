@@ -1,25 +1,22 @@
 require "socket"
-require "./earl"
+require "../earl"
 
 module Earl
-  class UNIXServer
+  # :nodoc:
+  class TCPServer
     include Agent
     include Logger
 
-    @server : ::UNIXServer?
+    @server : ::TCPServer?
 
-    def initialize(@path : String, @mode : Int32?, @backlog = ::Socket::SOMAXCONN, &block : Socket ->)
+    def initialize(@host : String, @port : Int32, @backlog = ::Socket::SOMAXCONN, &block : Socket ->)
       @handler = block
     end
 
     def call : Nil
-      server = ::UNIXServer.new(@path, backlog: @backlog)
-      log.info { "started server fd=#{server.fd} path=#{@path}" }
+      server = ::TCPServer.new(@host, @port, backlog: @backlog)
+      log.info { "started server fd=#{server.fd} host=#{@host} port=#{@port}" }
       @server = server
-
-      if mode = @mode
-        File.chmod(@path, mode)
-      end
 
       while socket = server.accept?
         log.debug { "incoming connection fd=#{socket.fd}" }
@@ -27,9 +24,11 @@ module Earl
       end
     end
 
-    def call(socket : ::UNIXSocket) : Nil
+    def call(socket : ::TCPSocket) : Nil
       ::spawn do
         @handler.call(socket)
+      rescue ex
+        log.error(ex)
       ensure
         socket.close unless socket.closed?
       end

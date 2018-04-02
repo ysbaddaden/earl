@@ -1,11 +1,16 @@
 require "uri"
+require "socket"
 require "./earl"
-require "./ssl_server"
-require "./tcp_server"
-require "./unix_server"
+require "./socket/ssl_server"
+require "./socket/tcp_server"
+require "./socket/unix_server"
 
 module Earl
+  alias Socket = ::Socket | OpenSSL::SSL::Socket::Server
+
   abstract class SockServer < Supervisor
+    abstract def call(client : Socket)
+
     def add_tcp_listener(host : String, port : Int32, *, backlog = ::Socket::SOMAXCONN) : Nil
       server = TCPServer.new(host, port, backlog) do |client|
         call(client)
@@ -51,11 +56,12 @@ module Earl
 
     private def parse_host(uri)
       port = uri.port
-      raise ArgumentError.new("please specify a port to listen on") unless port
+      raise ArgumentError.new("please specify a port to listen to") unless port
 
       host = uri.host
-      raise ArgumentError.new("please specify a host or ip to listen on") unless host
+      raise ArgumentError.new("please specify a host or ip to listen to") unless host
 
+      # remove ipv6 brackets
       if host.starts_with?('[') && host.ends_with?(']')
         host = host[1..-2]
       end
@@ -85,19 +91,15 @@ module Earl
         ssl_context.verify_mode = OpenSSL::SSL::VerifyMode::FAIL_IF_NO_PEER_CERT
       when "none"
         ssl_context.verify_mode = OpenSSL::SSL::VerifyMode::NONE
-      else
-        if params["ca"]?
-          raise ArgumentError.new("please specify the SSL ca via 'ca='")
-        end
       end
 
       if ca = params["ca"]?
         ssl_context.ca_certificates = ca
+      elsif ssl_context.verify_mode.peer? || ssl_context.verify_mode.fail_if_no_peer_cert?
+        raise ArgumentError.new("please specify the SSL ca via 'ca='")
       end
 
       ssl_context
     end
-
-    abstract def call(client : Socket | OpenSSL::SSL::Socket::Server)
   end
 end

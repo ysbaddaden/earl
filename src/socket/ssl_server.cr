@@ -1,15 +1,16 @@
 require "openssl"
 require "socket"
-require "./earl"
+require "../earl"
 
 module Earl
+  # :nodoc:
   class SSLServer
     include Agent
     include Logger
 
     @server : ::TCPServer?
 
-    def initialize(@host : String, @port : Int32, @ssl_context : OpenSSL::SSL::Context::Server, @backlog = ::Socket::SOMAXCONN, &block : Socket | OpenSSL::SSL::Socket::Server ->)
+    def initialize(@host : String, @port : Int32, @ssl_context : OpenSSL::SSL::Context::Server, @backlog = ::Socket::SOMAXCONN, &block : Socket ->)
       @handler = block
     end
 
