@@ -21,7 +21,8 @@ module Earl
         signals.each do |signal|
           signal.trap do
             log.debug "received SIG#{signal} signal"
-            stop if running?
+            Fiber.yield
+            exit
           end
         end
 
