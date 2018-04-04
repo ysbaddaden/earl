@@ -40,7 +40,7 @@ module Earl
       assert agents.all? { |a| a.stopped? || a.stopping? }
     end
 
-    def test_graceful_termination_of_supervised_agents
+    def test_normal_termination_of_supervised_agents
       agents = [Noop.new, Noop.new]
       supervisor = Supervisor.new
 
@@ -49,7 +49,9 @@ module Earl
       assert agents.all?(&.starting?)
 
       supervisor.spawn
-      assert supervisor.running?
+      sleep 0
+
+      assert supervisor.stopped? || supervisor.stopping?
       assert agents.all? { |a| a.stopped? || a.stopping? }
     end
 
@@ -62,8 +64,13 @@ module Earl
       assert agent.starting?
 
       supervisor.spawn
+      sleep 0
+
       assert supervisor.running?
-      refute agent.crashed?
+      10.times do
+        refute agent.crashed?
+        sleep 0
+      end
 
       supervisor.stop
     end
