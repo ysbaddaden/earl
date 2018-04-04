@@ -2,18 +2,36 @@ require "../errors"
 
 module Earl
   module Agent
+    # The different statuses an agent can be in.
     enum Status
+      # Initial state. May return to this state after `Recycling`.
       Starting
+
+      # The agent was started and is still running. Previous state must be
+      # `Starting` to be able to transition.
       Running
+
+      # The agent has been asked to stop. Previous state must be
+      # `Running` to be able to transition.
       Stopping
+
+      # The agent has stopped. Previous state must be `Stopping` to be able to
+      # transition.
       Stopped
+
+      # The agent has crashed (i.e. raised an exception). Previous state must be
+      # `Running`, `Stopping` or `Crashed` to be able to transition.
       Crashed
+
+      # The agent has been told to recycle. Previous state must be `Stopped` or
+      # `Crashed` to be able to transition.
       Recycling
     end
 
-    # Finite state machine that maintains the `Status` of an `Agent`.
+    # :nodoc:
     class State
-      # :nodoc:
+      # Finite state machine that maintains the `Status` of an `Agent`.
+
       protected def initialize(@agent : Agent)
         @status = Status::Starting
       end

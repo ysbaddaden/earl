@@ -6,11 +6,22 @@ require "./socket/tcp_server"
 require "./socket/unix_server"
 
 module Earl
+  # Actually `::Socket | OpenSSL::SSL::Socket::Server`
   alias Socket = ::Socket | OpenSSL::SSL::Socket::Server
 
+  # A stream socket server.
+  #
+  # - Binds to / listens on many interfaces and ports.
+  # - Servers are spawned in a dedicated `Fiber` then supervised.
+  # - Incoming connections are handled in their own `Fiber` that runs
+  #   `#call(client)` and are eventually closed when the method returns or
+  #   raised.
   abstract class SockServer < Supervisor
-    abstract def call(client : Socket)
+    # Called in a dedicated `Fiber` when a server receives a connection.
+    # Connections are closed when the method returns or raised.
+    abstract def call(client : Socket) : Nil
 
+    # Adds a TCP server.
     def add_tcp_listener(host : String, port : Int32, *, backlog = ::Socket::SOMAXCONN) : Nil
       server = TCPServer.new(host, port, backlog) do |client|
         call(client)
@@ -18,6 +29,7 @@ module Earl
       monitor(server)
     end
 
+    # Adds a TCP server with transparent SSL handling.
     def add_ssl_listener(host : String, port : Int32, ssl_context : OpenSSL::SSL::Context::Server, *, backlog = ::Socket::SOMAXCONN) : Nil
       server = SSLServer.new(host, port, ssl_context, backlog) do |client|
         call(client)
@@ -25,6 +37,7 @@ module Earl
       monitor(server)
     end
 
+    # Adds an UNIX server.
     def add_unix_listener(path : String, *, mode = nil, backlog = ::Socket::SOMAXCONN) : Nil
       server = UNIXServer.new(path, mode, backlog) do |client|
         call(client)
@@ -32,11 +45,18 @@ module Earl
       monitor(server)
     end
 
-    def add_listener(uri : String)
+    # Adds a server based on an URI definition. For example:
+    #
+    # ```
+    # server.add_listener("unix:///tmp/earl.sock")
+    # server.add_listener("tcp://[::]:9292")
+    # server.add_listener("ssl://10.0.3.1:443/?cert=ssl/server.crt&key=ssl/server.key")
+    # ```
+    def add_listener(uri : String) : Nil
       add_listener URI.parse(uri)
     end
 
-    def add_listener(uri : URI)
+    def add_listener(uri : URI) : Nil
       params = HTTP::Params.parse(uri.query || "")
 
       case uri.scheme

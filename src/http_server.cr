@@ -2,6 +2,12 @@ require "./sock_server"
 require "http/server"
 
 module Earl
+  # A HTTP/1 server.
+  #
+  # - Based on `SockServer`, thus binds and listens on many interfaces and ports
+  #   (TCP, SSL, UNIX);
+  # - Leverages `HTTP::Server` request processor and supports all existing
+  #   `HTTP::Handler`.
   class HTTPServer < SockServer
     @handler : HTTP::Handler | Proc(HTTP::Server::Context, Nil)
 
@@ -21,7 +27,8 @@ module Earl
       super()
     end
 
-    def call(socket)
+    # Processes the incoming HTTP connection.
+    def call(socket : Earl::Socket)
       @request_processor.process(socket, socket)
     end
 
