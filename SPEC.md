@@ -26,6 +26,10 @@ Earl agents are a set of modules that can be mixed into classes:
 
 Earl also provides ready to use agent classes:
 
+- [`Earl.application`](#earlapplication)
+
+  A specific [`Earl::Supervisor`](#earlsupervisor) suited for running programs.
+
 - [`Earl::Supervisor`](#earlsupervisor)
 
   An agent that supervises other agents, starting them in their own fiber and
@@ -253,10 +257,13 @@ extensions, to avoid introducing conflicting patterns (namings, hooks, methods).
 
 The `Earl::Logger` module is both an Agent and an extension module.
 
-The Agent is always started (and supervised) and handles the actual log of
-messages to backends. The module has class methods to check whether a severity
-will be logged (e.g. `Earl::Logger.info?`) and methods to log messages for an
-Agent (e.g. `.info(agent, message)` or `.warn(agent) { message }`).
+The Agent must always be started (and supervised), usually by starting (or
+spawning) `Earl.application`.
+
+The agent handles the actual log of messages to backends. The module has class
+methods to check whether a severity will be logged (e.g. `Earl::Logger.info?`)
+and methods to log messages for an Agent (e.g. `.info(agent, message)` or
+`.warn(agent) { message }`).
 
 The extension module should only be included in classes that already include
 [`Earl::Agent`](#earlagent). It provides a single method that wraps the Logger
@@ -496,6 +503,24 @@ The following object are agent implements with a generic role, which is to start
 and monitor other agents. Being agents themselves they can be started, spawned,
 stopped or recycled as needed.
 
+
+### Earl.application
+
+The `Earl.application` object is a [`Earl::Supervisor`](#earlsupervisor)
+singleton suited for running programs. It traps some POSIX signals (e.g.
+`SIGINT` and `SIGTERM`) and adds an `at_exit` handler to cleanly terminate a
+program.
+
+Some agents can require that `Earl.application` is started —for example
+[`Earl::Logger`](#earllogger) does. Libraries can also assume that it will be
+started and leverage it to monitor their agents transparently.
+
+`Earl.application` can be spawned in the background then forgotten, but we
+advise to leverage it as the main supervisor for your program.
+
+Since `Earl.application is a mere [`Earl::Supervisor`](#earlsupervisor) calling
+`Earl.application.start` will spawn and monitor agents and block until the
+program is told to terminate.
 
 ### Earl::Supervisor
 
