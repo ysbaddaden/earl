@@ -14,16 +14,27 @@ end
 
 class Producer
   include Earl::Agent
-  include Earl::Registry(Consumer, Int32)
+
+  def initialize
+    @registry = Earl::Registry(Consumer, Int32).new
+  end
+
+  def register(agent)
+    @registry.register(agent)
+  end
+
+  def unregister(agent)
+    @registry.unregister(agent)
+  end
 
   def call
     0.upto(999) do |i|
-      registry.send(i)
+      @registry.send(i)
     end
   end
 
   def terminate
-    registry.stop
+    @registry.stop
   end
 end
 

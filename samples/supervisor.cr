@@ -16,22 +16,30 @@ end
 
 class Producer
   include Earl::Agent
-  include Earl::Registry(Consumer, Message)
 
   def initialize
     @i = 0
+    @registry = Earl::Registry(Consumer, Message).new
+  end
+
+  def register(agent : Consumer)
+    @registry.register(agent)
+  end
+
+  def unregister(agent : Consumer)
+    @registry.unregister(agent)
   end
 
   def call
     while running?
-      registry.send(@i += 1)
+      @registry.send(@i += 1)
       sleep 0.5
       raise "chaos monkey" if rand(0..9) == 1
     end
   end
 
   def terminate
-    registry.stop
+    @registry.stop
   end
 
   def reset
