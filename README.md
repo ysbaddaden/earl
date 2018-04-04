@@ -2,23 +2,29 @@
 
 Service objects for Crystal, aka Agents.
 
-Crystal provides simple primitives for achieving concurrent applications, but no
-advanced layer for structuring applications. Earl tries to fill that hole with a
-as-simple-as possible object-based API that's easy to grasp and understand.
+Crystal provides primitives for achieving concurrent applications, but doesn't
+have advanced layers for structuring applications. Earl tries to fill that gap
+with a simple object-based API that's easy to grasp and understand.
 
-If your application has different, but interconnected, objects that should be
-always alive, until they decide, or are asked, to stop; if these different
-objects must communicate together; if you feel that you `spawn` and `loop` and
-must `rescue` errors to log and restart objects all too often; if you need a
-pool of workers to dispatch work to; if so, then Earl is for you.
+## Is Earl for me?
+
+- Your application has different, interconnected, objects that should always be
+  alive, until they decide or are asked to stop.
+- These different objects must communicate together.
+- You feel that you `spawn` and `loop` and must `rescue` exceptions and restart
+  objects too often.
+-  You need a pool of workers to dispatch work to.
+- ...
+
+If so, then Earl is for you.
 
 
 ## Status
 
-Earl is still in its infancy, but should be faily useable already.
+Earl is still in its infancy, but is fairly useable already.
 
-If you believe Earl could help structure your application(s) please try it
-and report any shortcomings, bugs or successes you may have found!
+If you believe Earl could help structure your application(s) please try it, and
+report any shortcomings and successes you had!
 
 
 ## Usage
@@ -31,17 +37,9 @@ dependencies:
     github: ysbaddaden/earl
 ```
 
-You can then `require "earl"` to pull everything. Alternatively, you may only
-require selected components, for example agents and mailboxes:
-
-```crystal
-require "earl/agent"
-require "earl/mailbox"
-```
-
-For a formal depiction of the Earl library, you'll may want to read <SPEC.md>.
-For an informal introduction filled with examples, keep reading. For usage
-examples see the <samples> directory.
+For a formal depiction of the Earl library, you can read <SPEC.md>. For an
+informal introduction filled with examples, keep reading. For usage examples see
+the <samples> directory.
 
 
 ## Getting Started
@@ -68,24 +66,23 @@ class Foo
 end
 ```
 
-Earl will then take care to monitor the agent's state, and provide a number of
-facilities to start and stop agents, to trap an agent crash or normal stop, as
-well as recycling.
+Earl monitors the agent's state, and provides facilities to start and stop
+agents, to trap an agent crash or normal stop, as well as recycling them.
 
-Communication (`Earl::Mailbox`) and broadcasting (though `Earl::Registry`) are
-opt-in extensions, and will be introduced below.
+Communication (`Earl::Mailbox`) and broadcasting (`Earl::Registry`) are opt-in
+extensions, and introduced below.
 
 #### Start Agents
 
-We may start this agent in the current fiber with `#start`, which will block
+You can start this agent in the current fiber with `#start`. This will block
 until the agent is stopped:
 
 ```crystal
 foo = Foo.new
 foo.start
 ```
-Alternatively we could have called `#spawn` to start the agent in its own
-fiber, and return immediately:
+Alternatively you can call `#spawn` to start the agent in its own fiber, and
+return immediately:
 
 ```crystal
 foo = Foo.new
@@ -94,33 +91,32 @@ foo.spawn
 do_something_else_concurrently
 ```
 
-Depending on the context, it may be useful to block the current fiber, for
-example if a library already spawned a dedicated fiber (e.g. `HTTP::Server`
-requests); sometimes we need to start services in the background instead, and
-continue on with something else.
+Depending on the context, it can be useful to block the current fiber. A
+library, for example, already spawned a dedicated fiber (e.g. `HTTP::Server`
+connections). Sometimes we need to start services in the background instead, and
+continue on.
 
 #### Stop Agents
 
-We can also ask an agent to gracefully stop with `#stop`. Each agent is
-responsible for quickly returning from the `#call` method whenever the agent's
-state change. Hence the `running?` call in the `Foo` agent above to break out of
-the loop.
+We can ask an agent to stop gracefully with `#stop`. Each agent must return
+quickly from the `#call` method when the agent's state changes. Hence the
+`running?` call in the `Foo` agent above to break out of the loop, for example.
 
 ```crystal
 foo.stop
 ```
 
-Whenever an agent is stopped its `#terminate` method hook will be invoked,
-allowing the agent to act upon termination (e.g. to notify other services,
-closing connections, or overall cleanup required).
+When an agent is stopped its `#terminate` method hook is called, allowing the
+agent to act upon termination. For example notify other services, closing
+connections, or cleaning up.
 
 #### Link & Trap Agents
 
-When starting (or spawning) an agent A we can link another agent B to be
-notified when the agent A stopped or crashed (raised an unhandled exception).
-The linked agent B must implement the `#trap(Agent, Exception?`) method. If
-agent A crashed, then the unhandled exception will be passed, otherwise it will
-be `nil`. In all cases, the stopped/crashed agent will be passed.
+When starting or spawning an agent `A` we can link another agent `B` to be
+notified when the agent `A` stopped or crashed (raised an unhandled exception).
+The linked agent `B` must implement the `#trap(Agent, Exception?`) method. If
+agent `A` crashed, then the unhandled exception is passed, otherwise it's `nil`.
+In all cases, the stopped/crashed agent is passed.
 
 For example:
 ```crystal
@@ -155,36 +151,36 @@ b.start(link: a)
 ```
 
 The `Earl::Supervisor` and `Earl::Pool` agents use links and traps to keep
-services alive for example.
+services alive for instance.
 
 #### Recycle Agents
 
-A stopped or crashed agent may be recycled in order to be restarted. Agents that
-are meant to be recycled must implement the `#reset` method hook and return the
-internal state of the agent to a fresh state, as if it had just been
-initialized.
+A stopped or crashed agent can be recycled to be restarted. Agents meant to be
+recycled must implement the `#reset` method, and return the agent's internal
+state to its pristine condition. A recycled agent must be indistinguishable from
+a created agent.
 
-A recycled agent will see its state return back to the initial starting state,
-allowing it to start. The `Earl::Supervisor`, for example, expects the agents it
-monitors to properly reset themselves.
+A recycled agent will return to the initial starting state, allowing it to
+restart. `Earl::Supervisor`, for example, expects the agents it monitors to
+properly reset themselves.
 
 
 ### Agent Extensions
 
 #### Mailbox
 
-The `Earl::Mailbox(M)` module will extend an agent with a Channel(M) of
-messages and direct methods to `#send(M)` a message to an agent (concurrency
-safe) and to receive them.
+The `Earl::Mailbox(M)` module extends an agent with a `Channel(M)` along with
+methods to `#send(M)` a message to an agent and to receive them (concurrency
+safe).
 
 The module merely wraps a `Channel(M)` but proposes a standard structure for
-agents to have an incoming mailbox of messages. All agents thus behave
-identically, and we can assume that an agent that expects to receive messages
-to have a `#send(M)` method.
+agents to have an incoming mailbox of messages. All agents thus behave the
+same, and we can assume that an agent that expects to receive messages has a
+`#send(M)` method.
 
-Another advantage is that an agent's mailbox will be closed when the agent is
-asked to terminate, so an agent can simply loop over `#receive?` until it
-returns `nil`, without having to check for the agent's state.
+An agent's mailbox will be closed when the agent is asked to stop. An agent can
+simply loop over `#receive?` until it returns `nil`, without having to check for
+the agent's state.
 
 See the *Registry* section below for an example.
 
@@ -192,13 +188,13 @@ See the *Registry* section below for an example.
 #### Registry
 
 The `Earl::Registry(A, M)` module will extend an agent to `#register` and
-`#unregister` agents of type `A` that can receive messages of type `M`. The `A`
-agents to register are expected to be capable to receive messages of type `M`,
-that is to include `Earl::Mailbox(M)`. When running the agent can broadcast a
-message to all registered agents. It may also ask all registered agents to stop.
+`#unregister` agents of type `A` that can receive messages of type `M`. The
+agents to register must be capable to receive messages of type `M` —i.e. include
+`Earl::Mailbox(M)` or `Earl::Artist(M)`). When running, the agent can broadcast
+a message to all registered agents. It can also ask registered agents to stop.
 
-For example we may declare a `Consumer` agent that will receive a count and
-print it, until it's asked to stop:
+For example, we can declare a `Consumer` agent that receives a count and prints
+it, until it's asked to stop:
 
 ```crystal
 class Consumer
@@ -213,8 +209,8 @@ class Consumer
 end
 ```
 
-Then we can declare a producer that will produce number and broadcast them to
-the registered consumers:
+Now we can declare a producer that will broadcast numbers to registered
+consumers:
 
 ```crystal
 class Producer
@@ -235,10 +231,10 @@ class Producer
 end
 ```
 
-We can now create our producer and consumer agents, register the consumers to
-the producer and eventually spawn consumers (in their own fibers) and our
-producer in the current fiber, thus blocking, until we hit Ctrl+C to interrupt
-our program:
+Now, we can create our producer and consumer agents, and register the consumers
+to the producer. We spawn the consumers that will start in their dedicated
+fiber. Last, we start the producer in the current fiber, that will block until
+we hit `Ctrl+C` to interrupt the program:
 
 ```crystal
 producer = Producer.new
@@ -255,10 +251,8 @@ Signal::INT.trap { producer.stop }
 producer.start
 ```
 
-Despite registering consumers before starting the producer, the registry is
-concurrency-safe and thus can be updated live at any time. This proves useful
-when a consumer crashes and a new one must be registered against a running
-producer.
+The example registers consumers before starting the produce, but the registry
+is concurrency-safe. Consumers can be added and removed at any time.
 
 
 ### Specific Agents
@@ -266,15 +260,14 @@ producer.
 #### Supervisor
 
 The `Earl::Supervisor` agent monitors other agents (including other
-supervisors). Monitored agents will be spawned in their own fiber when the
-supervisor starts. If a monitored agent crashes it will be recycled then
-restarted in its own fiber again.
+supervisors). Monitored agents are spawned in their own fiber when the
+supervisor starts. If a monitored agent crashes it's recycled then restarted
+in its own fiber.
 
-A supervisor may be used to keep infinitely running concurrent agents. It may
-also be used to prevent the main thread from exiting.
+A supervisor can keep indefinitely running concurrent agents. It can also
+prevent the main thread from exiting.
 
-For example, using the `Producer` example from the *Registry* section, we may
-supervise the producer agent with:
+For example, let's supervise the `Producer` example from the *Registry* section:
 
 ```crystal
 supervisor = Supervisor.new
@@ -294,27 +287,26 @@ Signal::INT.trap { supervisor.stop }
 supervisor.start
 ```
 
-Now if the producer ever crashes, it will be restarted. You can test this by
-adding a random `raise "chaos monkey"` into the `Producer#call` loop. The error
-will be logged, the producer restarted and the application continue on.
+Now if the producer crashes, it will be restarted. You can test this by adding a
+random `raise "chaos monkey"` into the `Producer#call` loop. The error will be
+logged, the producer restarted and the application continue running.
 
 #### Pool
 
-The `Earl::Pool(A, M)` agent starts and spawns a fixed size pool of agents of
-type `A` to which we can dispatch messages (of type `M`) in a exactly-once way.
-This is the opposite of `Earl::Registry` which broadcasts a message to all
-registered agents, `Earl::Pool` will dispatch a message to a single worker,
-which can be any worker in the pool.
+The `Earl::Pool(A, M)` agent spawns a fixed size list of agents of type `A`, to
+which we can dispatch messages (of type `M`). Messages are delivered to a single
+worker of the pool in an exactly-once manner. This is different from
+`Earl::Registry` that broadcasts a message to all registered agents.
 
 Whenever a worker agent crashes, the pool will recycle and restart it. A worker
-can stop properly, but should only do so when asked to.
+can stop normally, but it should only do so when asked to stop.
 
-Worker agents (of type `A`) are expected to be capable to be sent messages of
-type `M`, that is to include `Earl::Mailbox(M)`, as well as to override their
-`#reset` method to properly reset an agent.
+Worker agents (of type `A`) must be capable to receive messages of type `M`.
+I.e. they include `Earl::Mailbox(M)` or `Earl::Artist(M)`. They must also
+override their `#reset` method to properly reset an agent.
 
-Note that `Earl::Pool` will replace the workers' Mailbox, so they all share a
-single `Channel(M)` to allow the exactly-once delivery of messages.
+Note that `Earl::Pool` will replace the workers' mailbox. All workers then share
+a single `Channel(M)` for an exactly-once delivery of messages.
 
 For example:
 
@@ -347,20 +339,20 @@ pool.start
 # => message 5
 ```
 
-Pools are regular agents, so we could theoretically have pools of pools, but we
-discourage such usage, since they'll mostly increase the complexity of your
-application for little to no real benefit.
+Pools are regular agents, so we can have pools of pools, but we discourage such
+usage. It'll only increase the complexity of your application for little or no
+real benefit.
 
-You may supervise pools with `Earl::Supervisor`, though pools are themselves
-a supervisor of specific agents, so it may be redundant to supervise them too.
+You can supervise pools with `Earl::Supervisor`. It can feel redundant because
+pools already monitor other agents, but it can be useful to only have a few
+supervisors to start (and stop).
 
 
 ## Credits
 
 - Author: Julien Portalier (@ysbaddaden)
 
-Probably Inspired by my very limited knowledge of
-[Celluloid](https://celluloid.io/) and Erlang OTP.
+Somewhat inspired by my very limited knowledge of Erlang OTP & Elixir.
 
 
 ## License
