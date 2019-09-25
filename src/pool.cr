@@ -25,7 +25,7 @@ module Earl
     def initialize(@capacity : Int32)
       @workers = Array(A).new(@capacity)
       @mutex = Mutex.new
-      @fiber = nil
+      @done = Channel(Nil).new
     end
 
     # Spawns workers in their dedicated `Fiber`. Blocks until all workers have
@@ -44,8 +44,7 @@ module Earl
         end
       end
 
-      @fiber = Fiber.current
-      Scheduler.reschedule
+      @done.receive?
 
       until @workers.empty?
         Fiber.yield
@@ -74,9 +73,8 @@ module Earl
         agent.stop rescue nil
       end
 
-      if fiber = @fiber
-        @fiber = nil
-        Scheduler.enqueue(fiber)
+      unless @done.closed?
+        @done.close
       end
     end
   end
