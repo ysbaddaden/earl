@@ -10,9 +10,7 @@ module Earl
   # life. See `Status` for the different statuses. Agents can act upon their
   # state, for example loop while `.running?` returns true.
   module Agent
-    protected def state : State
-      @state ||= State.new(self)
-    end
+    @state = State.new
 
     # Starts the agent in the current `Fiber`. Blocks until the agent is
     # stopped or crashed.
@@ -20,16 +18,16 @@ module Earl
     # You may link another object to be notified if the agent crashed (raised an
     # exception) or stopped gracefully by calling its `#trap` method.
     def start(*, link : Agent? = nil) : Nil
-      state.transition(Status::Running)
+      @state.transition(self, Status::Running)
       begin
         call
       rescue ex
-        state.transition(Status::Crashed)
+        @state.transition(self, Status::Crashed)
         link.trap(self, ex) if link
       else
         link.trap(self, nil) if link
         stop if running?
-        state.transition(Status::Stopped)
+        @state.transition(self, Status::Stopped)
       end
     end
 
@@ -47,7 +45,7 @@ module Earl
 
     # Asks the agent to stop.
     def stop : Nil
-      state.transition(Status::Stopping)
+      @state.transition(self, Status::Stopping)
       terminate
     end
 
@@ -67,9 +65,9 @@ module Earl
 
     # Tells the agent to recycle.
     def recycle : Nil
-      state.transition(Status::Recycling) unless recycling?
+      @state.transition(self, Status::Recycling) unless recycling?
       reset
-      state.transition(Status::Starting)
+      @state.transition(self, Status::Starting)
     end
 
     # Called when the agent must be recycled. This must return the object to its
@@ -78,27 +76,27 @@ module Earl
     end
 
     def starting? : Bool
-      state.value.starting?
+      @state.value.starting?
     end
 
     def running? : Bool
-      state.value.running?
+      @state.value.running?
     end
 
     def stopping? : Bool
-      state.value.stopping?
+      @state.value.stopping?
     end
 
     def stopped? : Bool
-      state.value.stopped?
+      @state.value.stopped?
     end
 
     def crashed? : Bool
-      state.value.crashed?
+      @state.value.crashed?
     end
 
     def recycling? : Bool
-      state.value.recycling?
+      @state.value.recycling?
     end
   end
 end

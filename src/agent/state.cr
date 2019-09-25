@@ -29,10 +29,10 @@ module Earl
     end
 
     # :nodoc:
-    class State
+    struct State
       # Finite state machine that maintains the `Status` of an `Agent`.
 
-      def initialize(@agent : Agent)
+      def initialize
         @status = Status::Starting
       end
 
@@ -57,9 +57,9 @@ module Earl
         end
       end
 
-      def transition(new_status : Status) : Nil
+      def transition(agent : Agent, new_status : Status) : Nil
         if can_transition?(new_status)
-          Logger.debug(@agent) { "transition from=#{@status} to=#{new_status}" }
+          Logger.debug(agent) { "transition from=#{@status} to=#{new_status}" }
           @status = new_status
         else
           raise TransitionError.new("can't transition agent state from #{@status} to #{new_status}")

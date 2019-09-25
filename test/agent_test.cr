@@ -38,20 +38,16 @@ module Earl
   class AgentTest < Minitest::Test
     def test_status
       agent = StatusAgent.new
-      assert_equal Agent::Status::Starting, agent.state.value
       assert agent.starting?
 
       spawn { agent.start }
       sleep(0)
-      assert_equal Agent::Status::Running, agent.state.value
       assert agent.running?
 
       agent.stop
-      assert_equal Agent::Status::Stopping, agent.state.value
       assert agent.stopping?
 
       sleep(0)
-      assert_equal Agent::Status::Stopped, agent.state.value
       assert agent.stopped?
     end
 
@@ -72,7 +68,7 @@ module Earl
 
     def test_stop_executes_terminate
       agent = Noop.new
-      agent.state.transition(Agent::Status::Running)
+      agent.@state.transition(agent, Agent::Status::Running)
       agent.stop
       assert_equal 1, agent.terminated
     end
