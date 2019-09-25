@@ -51,6 +51,10 @@ module Earl
       end
     end
 
+    def call(message : M)
+      raise "unreachable"
+    end
+
     # Recycles and restarts crashed and unexpectedly stopped agents.
     def trap(agent : A, exception : Exception?) : Nil
       if exception
