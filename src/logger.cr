@@ -61,14 +61,14 @@ module Earl
         # Logs *message* if `{{method}}?` returns true.
         def self.{{method}}(agent : Agent, message : String) : Nil
           return unless @@logger.{{method}}?
-          @@logger.send({Severity::{{constant.id}}, agent, Time.now, message})
+          @@logger.send({Severity::{{constant.id}}, agent, Time.utc, message})
         end
 
         # Logs the message returned by the block if `{{method}}?` returns
         # true, otherwise the block is never invoked.
         def self.{{method}}(agent : Agent, &block : -> String) : Nil
           return unless @@logger.{{method}}?
-          @@logger.send({Severity::{{constant.id}}, agent, Time.now, yield})
+          @@logger.send({Severity::{{constant.id}}, agent, Time.utc, yield})
         end
       {% end %}
     {% end %}
