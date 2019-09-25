@@ -12,7 +12,7 @@ module Earl
 
     # :nodoc:
     def mailbox : Channel(M)
-      @mailbox ||= Channel::Buffered(M).new
+      @mailbox ||= Channel(M).new(10)
     end
 
     # Replaces the mailbox. The mailbox won't be closed automatically when the

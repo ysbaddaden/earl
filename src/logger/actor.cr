@@ -37,7 +37,10 @@ module Earl
       {% end %}
 
       def terminate
-        until mailbox.empty?
+        # HACK:
+        queue = mailbox.@queue.not_nil!
+
+        until queue.empty?
           Fiber.yield
         end
       end
