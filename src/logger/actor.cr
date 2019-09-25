@@ -20,7 +20,7 @@ module Earl
         @close_mailbox_on_stop = false
       end
 
-      def call : Nil
+      def call
         while mail = receive?
           severity, agent, time, message = mail
 

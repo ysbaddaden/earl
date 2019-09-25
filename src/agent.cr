@@ -43,7 +43,7 @@ module Earl
     # The logic of the `Agent`. May loop forever or until asked to stopped. If
     # an exception is raised the agent will be crashed; if the method returns
     # the agent will simply stop.
-    abstract def call : Nil
+    abstract def call
 
     # Asks the agent to stop.
     def stop : Nil

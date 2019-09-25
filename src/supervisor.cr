@@ -28,7 +28,7 @@ module Earl
 
     # Spawns all agents to supervise in their dedicated `Fiber`. Blocks until
     # all agents have stopped.
-    def call : Nil
+    def call
       agents = @agents
       count = agents.size
 

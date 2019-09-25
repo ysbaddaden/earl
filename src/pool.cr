@@ -30,7 +30,7 @@ module Earl
 
     # Spawns workers in their dedicated `Fiber`. Blocks until all workers have
     # stopped.
-    def call : Nil
+    def call
       @capacity.times do
         spawn do
           agent = A.new

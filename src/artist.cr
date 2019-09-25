@@ -19,12 +19,12 @@ module Earl
     end
 
     # Dispatches messages to `#call(message)` until asked to stop.
-    def call : Nil
+    def call
       while message = receive?
         call(message)
       end
     end
 
-    abstract def call(message : M) : Nil
+    abstract def call(message : M)
   end
 end

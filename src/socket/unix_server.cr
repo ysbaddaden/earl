@@ -13,7 +13,7 @@ module Earl
       @handler = block
     end
 
-    def call : Nil
+    def call
       server = ::UNIXServer.new(@path, backlog: @backlog)
       log.info { "started server fd=#{server.fd} path=#{@path}" }
       @server = server
@@ -28,7 +28,7 @@ module Earl
       end
     end
 
-    def call(socket : ::UNIXSocket) : Nil
+    def call(socket : ::UNIXSocket)
       ::spawn do
         @handler.call(socket)
       rescue ex

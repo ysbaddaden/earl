@@ -13,7 +13,7 @@ module Earl
       @handler = block
     end
 
-    def call : Nil
+    def call
       server = ::TCPServer.new(@host, @port, backlog: @backlog)
       log.info { "started server fd=#{server.fd} host=#{@host} port=#{@port}" }
       @server = server
@@ -24,7 +24,7 @@ module Earl
       end
     end
 
-    def call(socket : ::TCPSocket) : Nil
+    def call(socket : ::TCPSocket)
       ::spawn do
         @handler.call(socket)
       rescue ex

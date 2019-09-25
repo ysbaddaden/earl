@@ -19,7 +19,7 @@ module Earl
   abstract class SockServer < Supervisor
     # Called in a dedicated `Fiber` when a server receives a connection.
     # Connections are closed when the method returns or raised.
-    abstract def call(client : Socket) : Nil
+    abstract def call(client : Socket)
 
     # Adds a TCP server.
     def add_tcp_listener(host : String, port : Int32, *, backlog = ::Socket::SOMAXCONN) : Nil

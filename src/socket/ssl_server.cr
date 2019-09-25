@@ -14,7 +14,7 @@ module Earl
       @handler = block
     end
 
-    def call : Nil
+    def call
       server = ::TCPServer.new(@host, @port, backlog: @backlog)
       log.info { "started server fd=#{server.fd} host=#{@host} port=#{@port}" }
       @server = server
@@ -25,7 +25,7 @@ module Earl
       end
     end
 
-    def call(tcp_socket : ::TCPSocket) : Nil
+    def call(tcp_socket : ::TCPSocket)
       ::spawn do
         ssl_socket = OpenSSL::SSL::Socket::Server.new(tcp_socket, @ssl_context, sync_close: true)
         @handler.call(ssl_socket)
