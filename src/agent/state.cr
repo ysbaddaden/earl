@@ -32,7 +32,7 @@ module Earl
     class State
       # Finite state machine that maintains the `Status` of an `Agent`.
 
-      protected def initialize(@agent : Agent)
+      def initialize(@agent : Agent)
         @status = Status::Starting
       end
 

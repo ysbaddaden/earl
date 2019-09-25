@@ -91,7 +91,7 @@ module Earl
 
     struct Log
       # :nodoc:
-      protected def initialize(@agent : Agent)
+      def initialize(@agent : Agent)
       end
 
       # Returns true if the current level is SILENT.
