@@ -18,7 +18,7 @@ end
 module Earl
   module Logger
     def self.pending_messages?
-      !@@logger.mailbox.@queue.not_nil!.empty?
+      !@@logger.@mailbox.@queue.not_nil!.empty?
     end
   end
 

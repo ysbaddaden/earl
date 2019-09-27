@@ -126,8 +126,8 @@ module Earl
       end
     end
 
-    def log : Log
-      @log ||= Log.new(self)
+    def log
+      Log.new(self)
     end
   end
 end

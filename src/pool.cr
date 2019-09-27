@@ -38,7 +38,7 @@ module Earl
 
           while agent.starting?
             log.info { "starting worker" }
-            agent.mailbox = mailbox
+            agent.mailbox = @mailbox
             agent.start(link: self)
           end
         end
