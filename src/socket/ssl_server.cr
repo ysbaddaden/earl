@@ -27,8 +27,8 @@ module Earl
 
     def call(tcp_socket : ::TCPSocket)
       ::spawn do
-        ssl_socket = OpenSSL::SSL::Socket::Server.new(tcp_socket, @ssl_context, sync_close: true)
-        @handler.call(ssl_socket)
+        ssl_socket = OpenSSL::SSL::Socket::Server.new(tcp_socket, @ssl_context, sync_close: true) rescue nil
+        @handler.call(ssl_socket) if ssl_socket
       rescue ex
         log.error(ex)
       ensure
