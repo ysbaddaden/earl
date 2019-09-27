@@ -17,7 +17,7 @@ module Earl
 
       def initialize(@level, backend : Backend)
         @backends = [backend] of Backend
-        @close_mailbox_on_stop = false
+        @mailbox_close_on_stop = false
       end
 
       def call

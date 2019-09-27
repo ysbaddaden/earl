@@ -7,7 +7,7 @@ module Earl
   # take messages from the mailbox —undocumented because they're `protected`.
   module Mailbox(M)
     macro included
-      @close_mailbox_on_stop = true
+      @mailbox_close_on_stop = true
     end
 
     # :nodoc:
@@ -18,7 +18,7 @@ module Earl
     # Replaces the mailbox. The mailbox won't be closed automatically when the
     # agent is asked to stop.
     def mailbox=(@mailbox : Channel(M)) : Channel(M)
-      @close_mailbox_on_stop = false
+      @mailbox_close_on_stop = false
       mailbox
     end
 
@@ -40,7 +40,7 @@ module Earl
 
     # :nodoc:
     def stop : Nil
-      if @close_mailbox_on_stop
+      if @mailbox_close_on_stop
         mailbox.close
       end
       super
