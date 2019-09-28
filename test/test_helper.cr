@@ -1,7 +1,18 @@
 require "minitest/autorun"
 require "../src/earl"
+require "./support/rwlock"
 
 class Minitest::Test
+  @@rwlock = Earl::RWLock.new
+
+  def setup
+    @@rwlock.lock_read
+  end
+
+  def teardown
+    @@rwlock.unlock_read
+  end
+
   protected def eventually(timeout : Time::Span = 5.seconds)
     start = Time.monotonic
 

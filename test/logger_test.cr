@@ -24,7 +24,14 @@ module Earl
 
   class LoggerTest < Minitest::Test
     def setup
+      @@rwlock.lock_write
       wait_for_logger
+    end
+
+    def teardown
+      wait_for_logger
+    ensure
+      @@rwlock.unlock_write
     end
 
     def test_level
@@ -66,11 +73,12 @@ module Earl
         assert loggy.log.error?
         refute loggy.log.silent?
 
-        log = capture do
+        log, _ = capture do
           Logger.debug(noop, "debug message")
           Logger.info(noop) { "informational message" }
           loggy.log.warn { "warning message" }
           loggy.log.error("error message")
+          wait_for_logger
         end
 
         refute_match /D \[.+\] Noop debug message/, log
@@ -86,7 +94,7 @@ module Earl
         refute loggy.log.error?
         assert loggy.log.silent?
 
-        log = capture do
+        log, _ = capture do
           loggy.log.debug { "debug message" }
           Logger.info(noop) { "informational message" }
           Logger.warn(noop, "warning message")
@@ -106,7 +114,7 @@ module Earl
         assert loggy.log.error?
         refute loggy.log.silent?
 
-        log = capture do
+        log, _ = capture do
           loggy.log.debug("debug message")
           Logger.info(noop, "informational message")
           loggy.log.warn { "warning message" }
@@ -131,28 +139,16 @@ module Earl
     end
 
     private def capture
-      originals = Logger.backends.dup
-      io = IO::Memory.new
-
-      begin
-        custom = Logger::ConsoleBackend.new(io)
-        Logger.backends.clear
-        Logger.backends << custom
-        yield io
-      ensure
+      capture_io do
+        yield
         wait_for_logger
-        Logger.backends.clear
-        originals.each { |backend| Logger.backends << backend }
+        sleep 10.milliseconds
       end
-
-      io.rewind.to_s
     end
 
     private def wait_for_logger
-      sleep 0
-
-      while Logger.pending_messages?
-        sleep 0
+      eventually(2.seconds) do
+        refute Logger.pending_messages?, "expected logger queue to eventually be empty"
       end
     end
   end
