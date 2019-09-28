@@ -1,5 +1,3 @@
-*.crt
-*.key
 /.shards
 /lib
 /doc
