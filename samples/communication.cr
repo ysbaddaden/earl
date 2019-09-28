@@ -1,5 +1,4 @@
 require "../src/earl"
-Earl.application.spawn
 
 class Foo
   include Earl::Artist(Int32 | String)
@@ -28,20 +27,21 @@ class Bar
   end
 end
 
+# create agents:
 foo = Foo.new
-foo.spawn
+Earl.application.monitor(foo)
 
 bar = Bar.new(foo)
-bar.spawn
+Earl.application.monitor(bar)
 
-5.times do |i|
-  bar.send(i)
-  Fiber.yield
-end
+# spawn all agents (supervisor, logger, foo & bar):
+Earl.application.spawn
 
-foo.stop
-bar.stop
+# send some messages:
+1.upto(5) { |i| bar.send(i) }
 
-until foo.stopped? && bar.stopped?
-  sleep(0)
-end
+# let agents run:
+sleep(10.milliseconds)
+
+# stop everything:
+Earl.application.stop
