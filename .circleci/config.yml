@@ -1,0 +1,55 @@
+version: 2
+
+references:
+  latest: &latest
+    - image: crystallang/crystal:latest
+
+  nightly: &latest
+    - image: crystallang/crystal:nightly
+
+  test_steps: &test_steps
+    - checkout
+    - run: shards install
+    - run: make test CRFLAGS="$(crystal --version | grep -q 'Crystal 0.31.0' && echo --no-debug)"
+
+  test_mt_steps: &test_mt_steps
+    - checkout
+    - run: shards install
+    - run: make test CRFLAGS="$(crystal --version | grep -q 'Crystal 0.31.0' && echo --no-debug) -Dpreview_mt" ARGS="--parallel=2 --chaos"
+
+jobs:
+  test:
+    docker: &latest
+    steps: &test_steps
+
+  test_mt:
+    docker: &latest
+    steps: &test_mt_steps
+
+  test_nightly:
+    docker: &nightly
+    steps: &test_steps
+
+  test_mt_nightly:
+    docker: &nightly
+    steps: &test_mt_steps
+
+workflows:
+  version: 2
+
+  ci:
+    jobs:
+      - test
+      - test_mt
+
+  nightly:
+    triggers:
+      - schedule:
+          cron: "0 2 * * 6" # every Saturday at 02:00 UTC
+          filters:
+            branches:
+              only:
+                - master
+    jobs:
+      - test_nightly
+      - test_mt_nightly
