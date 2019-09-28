@@ -1,6 +1,6 @@
 require "./test_helper"
 
-class Worker
+private class Worker
   include Earl::Artist(Int32)
 
   def call(message)

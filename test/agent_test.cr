@@ -41,12 +41,12 @@ module Earl
       assert agent.starting?
 
       spawn { agent.start }
-      timeout { assert agent.running? }
+      eventually { assert agent.running? }
 
       agent.stop
       assert agent.stopping?
 
-      timeout { assert agent.stopped? }
+      eventually { assert agent.stopped? }
     end
 
     def test_start_executes_call
@@ -77,23 +77,7 @@ module Earl
       agent.spawn(_yield: false)
       refute agent.running?
 
-      timeout { assert agent.running? }
-    end
-
-    private def timeout(span : Time::Span = 5.seconds)
-      start = Time.monotonic
-
-      loop do
-        sleep(0)
-
-        begin
-          yield
-        rescue ex
-          raise ex if (Time.monotonic - start) > span
-        else
-          break
-        end
-      end
+      eventually { assert agent.running? }
     end
   end
 end

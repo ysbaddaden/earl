@@ -23,15 +23,13 @@ module Earl
       counter.spawn
 
       counter.send(2)
-      sleep 0
-      assert_equal 2, counter.value
+      eventually { assert_equal 2, counter.value }
 
       counter.send(10)
       counter.send(23)
       counter.send(54)
       counter.stop
-      sleep 0
-      assert_equal 89, counter.value
+      eventually { assert_equal 89, counter.value }
 
       assert_raises(ClosedError) { counter.send(102) }
     end
@@ -45,7 +43,7 @@ module Earl
       assert_equal 2, counter.receive
 
       counter.spawn
-      sleep 0
+      sleep 10.milliseconds
       counter.stop
 
       assert_raises(ClosedError) { counter.receive }

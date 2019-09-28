@@ -31,13 +31,12 @@ module Earl
       assert agents.all?(&.starting?)
 
       supervisor.spawn
-      assert supervisor.running?
-      assert agents.all?(&.running?)
+      eventually { assert supervisor.running? }
+      eventually { assert agents.all?(&.running?) }
 
       supervisor.stop
-      sleep 0
-      assert supervisor.stopped?
-      assert agents.all? { |a| a.stopped? || a.stopping? }
+      eventually { assert supervisor.stopped? }
+      eventually { assert agents.all? { |a| a.stopped? || a.stopping? } }
     end
 
     def test_normal_termination_of_supervised_agents
@@ -49,10 +48,9 @@ module Earl
       assert agents.all?(&.starting?)
 
       supervisor.spawn
-      sleep 0
 
-      assert supervisor.stopped? || supervisor.stopping?
-      assert agents.all? { |a| a.stopped? || a.stopping? }
+      eventually { assert supervisor.stopped? || supervisor.stopping? }
+      eventually { assert agents.all? { |a| a.stopped? || a.stopping? } }
     end
 
     def test_recycles_supervised_agents
@@ -64,12 +62,10 @@ module Earl
       assert agent.starting?
 
       supervisor.spawn
-      sleep 0
+      eventually { assert supervisor.running? }
 
-      assert supervisor.running?
       10.times do
-        refute agent.crashed?
-        sleep 0
+        eventually { refute agent.crashed? }
       end
 
       supervisor.stop

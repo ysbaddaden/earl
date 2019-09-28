@@ -4,10 +4,8 @@ require "../src/sock_server"
 private class EchoServer < Earl::SockServer
   def call(socket : Earl::Socket) : Nil
     while line = socket.gets
-      socket.puts(line)
-      # openssl doesn't flush automagically on LF:
-      socket.flush if socket.is_a?(OpenSSL::SSL::Socket::Server)
-      sleep 0
+      socket << line << '\n'
+      socket.flush
     end
   end
 end
@@ -26,17 +24,9 @@ module Earl
       server.add_unix_listener("/tmp/earl_test_#{Process.pid}.sock")
 
       server.spawn
-      done = Channel(Nil).new
+      eventually { assert server.started? }
 
-      spawn do
-        UNIXSocket.open("/tmp/earl_test_#{Process.pid}.sock") do |socket|
-          999.times do |i|
-            socket.puts "hello julien #{i} (UNIX)"
-            assert_equal "hello julien #{i} (UNIX)", socket.gets
-          end
-        end
-        done.send(nil)
-      end
+      done = Channel(Nil).new
 
       spawn do
         TCPSocket.open("127.0.0.1", 9494) do |socket|
@@ -59,6 +49,16 @@ module Earl
               socket.flush
               assert_equal "hello julien #{i} (SSL)", socket.gets
             end
+          end
+        end
+        done.send(nil)
+      end
+
+      spawn do
+        UNIXSocket.open("/tmp/earl_test_#{Process.pid}.sock") do |socket|
+          999.times do |i|
+            socket.puts "hello julien #{i} (UNIX)"
+            assert_equal "hello julien #{i} (UNIX)", socket.gets
           end
         end
         done.send(nil)

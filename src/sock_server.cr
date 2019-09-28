@@ -121,5 +121,15 @@ module Earl
 
       ssl_context
     end
+
+    def started? : Bool
+      running? && @agents.all? do |agent|
+        if agent.responds_to?(:started?)
+          agent.started? # either TCPServer, UNIXServer an SSLServer
+        else
+          agent.running? # should be unreachable
+        end
+      end
+    end
   end
 end

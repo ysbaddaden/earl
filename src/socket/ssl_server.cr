@@ -41,10 +41,15 @@ module Earl
       if server = @server
         server.close unless server.closed?
       end
+      @server = nil
     end
 
     def reset : Nil
       @server = nil
+    end
+
+    def started? : Bool
+      !@server.nil?
     end
   end
 end

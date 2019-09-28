@@ -1,6 +1,6 @@
 require "./test_helper"
 
-class Consumer
+private class Consumer
   include Earl::Agent
   include Earl::Logger
   include Earl::Mailbox(Int32)
@@ -12,7 +12,7 @@ class Consumer
   end
 end
 
-class Producer
+private class Producer
   include Earl::Agent
 
   def initialize
