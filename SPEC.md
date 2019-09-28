@@ -336,10 +336,6 @@ consume the messages buffered in the mailbox. An agent running a loop can assume
 `receive?` to return `nil` and exit the loop when that happens, without having
 to check for `running?`.
 
-- `#mailbox`
-
-  Direct accessor to the underlying `Channel(M)` object.
-
 - `#mailbox=`
 
   Direct accessor to swap the underlying `Channel(M)` object. The mailbox won't
