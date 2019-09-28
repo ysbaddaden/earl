@@ -15,7 +15,7 @@ module Earl
   class Application < Supervisor
     # :nodoc:
     protected def initialize
-      @atomic = Atomic(Int32).new(0)
+      @flag = Atomic::Flag.new
 
       super
     end
@@ -29,19 +29,18 @@ module Earl
     # Traps signals. Adds an `at_exit` handler then delegates to `Supervisor`
     # which will block until all supervised actors are asked to terminate.
     def call
-      _, success = @atomic.compare_and_set(0, 1)
-      if success
-        signals.each do |signal|
-          signal.trap do
-            log.debug { "received SIG#{signal} signal" }
-            Fiber.yield
-            exit
-          end
-        end
+      return unless @flag.test_and_set
 
-        at_exit do
-          stop if running?
+      signals.each do |signal|
+        signal.trap do
+          log.debug { "received SIG#{signal} signal" }
+          Fiber.yield
+          exit
         end
+      end
+
+      at_exit do
+        stop if running?
       end
 
       super
