@@ -9,16 +9,7 @@ module Earl
       end
 
       def write(severity : Severity, agent : Agent, time : Time, message : String) : Nil
-        io = @io
-        io << severity.to_char
-        io << " ["
-        io << time
-        io << " "
-        io << Process.pid
-        io << "] "
-        io << agent.class.name
-        io << " "
-        io.puts message
+        @io << "#{severity.to_char} [#{time} #{Process.pid}] #{agent.class.name} #{message}\n"
       end
     end
   end
