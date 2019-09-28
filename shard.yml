@@ -1,17 +1,17 @@
 name: earl
-version: 0.1.0
+version: 0.2.0
 
 authors:
   - Julien Portalier <julien@portalier.com>
 
 description: |
-  Service objects for Crystal, aka Agents.
+  Service objects for Crystal (Agents, Artists, Supervisors, Pools, ...)
 
 development_dependencies:
   minitest:
     github: ysbaddaden/minitest.cr
     version: ">= 0.5.0"
 
-crystal_version: 0.24.1
+crystal: 0.31.1
 
 license: MIT
