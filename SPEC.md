@@ -524,7 +524,7 @@ and leverage it to have their agents monitored.
 `Earl.application` can be spawned in the background then forgotten, but we
 advise to leverage it as the main supervisor for your program.
 
-Since `Earl.application is a mere [`Earl::Supervisor`](#earlsupervisor) calling
+Since `Earl.application` is a mere [`Earl::Supervisor`](#earlsupervisor) calling
 `Earl.application.start` will spawn and monitor agents and block until the
 program is told to stop.
 
@@ -535,7 +535,7 @@ initialized agents. Supervisors can monitor any agent, as long as they include
 [`Earl::Agent`](#earlagent). That is, supervisors can supervise other
 supervisors.
 
-Supervisors spawns each agent in their own fiber. They recycle and restart
+Supervisors spawn each agent in their own fiber. They recycle and restart
 crashed agents, but keeps them stopped if they normally returned. That is, until
 the supervisor itself is asked to stop, or recycled/restarted, which will stop
 or recycle/restart all supervised agents.

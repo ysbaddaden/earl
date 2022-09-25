@@ -4,10 +4,9 @@ require "http/server"
 module Earl
   # A HTTP/1 server.
   #
-  # - Based on `SockServer`, thus binds and listens on many interfaces and ports
-  #   (TCP, SSL, UNIX);
-  # - Leverages `HTTP::Server` request processor and supports all existing
-  #   `HTTP::Handler`.
+  # The server is based on `SockServer`, thus binds and listens on many
+  # interfaces and ports (TCP, SSL, UNIX). Leverages `HTTP::Server` request
+  # processor and thus supports all `HTTP::Handler` middlewares.
   class HTTPServer < SockServer
     @handler : HTTP::Handler | Proc(HTTP::Server::Context, Nil)
 
