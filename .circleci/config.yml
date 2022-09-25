@@ -11,13 +11,13 @@ references:
     - checkout
     - run: shards install
     - run: |
-        make test CRFLAGS="$(crystal --version | grep -q 'Crystal 0.31.0' && echo --no-debug)"
+        make test
 
   test_mt_steps: &test_mt_steps
     - checkout
     - run: shards install
     - run: |
-        make test CRFLAGS="$(crystal --version | grep -q 'Crystal 0.31.0' && echo --no-debug) -Dpreview_mt" ARGS="--parallel=2 --chaos"
+        make test -Dpreview_mt" ARGS="--parallel=2 --chaos"
 
 jobs:
   test:
