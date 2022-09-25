@@ -17,7 +17,7 @@ references:
     - checkout
     - run: shards install
     - run: |
-        make test -Dpreview_mt" ARGS="--parallel=2 --chaos"
+        make test CRFLAGS="-Dpreview_mt" ARGS="--parallel=2 --chaos"
 
 jobs:
   test:
