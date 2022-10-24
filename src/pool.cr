@@ -1,4 +1,4 @@
-require "mutex"
+require "syn/core/mutex"
 require "./artist"
 
 module Earl
@@ -24,7 +24,7 @@ module Earl
 
     def initialize(@capacity : Int32)
       @workers = Array(A).new(@capacity)
-      @mutex = Mutex.new
+      @mutex = Syn::Core::Mutex.new(:unchecked)
       @done = Channel(Nil).new
     end
 
