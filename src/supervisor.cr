@@ -1,4 +1,5 @@
-require "mutex"
+require "syn/core/mutex"
+require "syn/core/wait_group"
 require "./agent"
 
 module Earl
@@ -13,8 +14,8 @@ module Earl
 
     def initialize
       @agents = [] of Agent
-      @mutex = Mutex.new
-      @done = Channel(Int32).new
+      @mutex = Syn::Core::Mutex.new
+      @group = Syn::Core::WaitGroup.new
     end
 
     # Adds an agent to supervise.
@@ -30,7 +31,7 @@ module Earl
     # all agents have stopped.
     def call
       agents = @agents
-      count = agents.size
+      @group.add(agents.size)
 
       agents.each do |agent|
         ::spawn do
@@ -40,7 +41,7 @@ module Earl
         end
       end
 
-      count.times { @done.receive? }
+      @group.wait
     end
 
     # Recycles and restarts crashed agents. Take note that an agent has stopped.
@@ -51,8 +52,8 @@ module Earl
         return agent.recycle if running?
       end
 
-      @done.send(1)
-      Fiber.yield
+      @group.done
+      Fiber.yield # TODO: sleep(0.seconds) ?
     end
 
     # Asks all supervised agents to stop.
@@ -60,12 +61,11 @@ module Earl
       @agents.reverse_each do |agent|
         agent.stop if agent.running?
       end
-      # @done.close
     end
 
     # Recycles all supervised agents.
     def reset : Nil
-      @done = Channel(Int32).new
+      @group = Syn::Core::WaitGroup.new
       @agents.each(&.recycle)
     end
   end

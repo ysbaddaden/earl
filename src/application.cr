@@ -1,4 +1,5 @@
 require "./supervisor"
+require "syn/core/once"
 
 module Earl
   # A singleton `Supervisor` accessible as `Earl.application` with additional
@@ -12,45 +13,46 @@ module Earl
   # spawned in the background (and forgotten) or leveraged to monitor the
   # program agents, and block the main `Fiber` until the program is told to
   # terminate.
+  #
+  # TODO: support windows
   class Application < Supervisor
     # :nodoc:
     protected def initialize
-      @flag = Atomic::Flag.new
-
+      @once = Syn::Core::Once.new
       super
     end
 
     # List of POSIX signals to trap. Defaults to `SIGINT` and `SIGTERM`. The
-    # list may only be changed prior to starting the application.
-    def signals
+    # list may only be mutated prior to starting the application!
+    def signals : Array(Signal)
       @signals ||= [Signal::INT, Signal::TERM]
     end
 
     # Traps signals. Adds an `at_exit` handler then delegates to `Supervisor`
     # which will block until all supervised actors are asked to terminate.
-    def call
-      return unless @flag.test_and_set
-
-      signals.each do |signal|
-        signal.trap do
-          log.debug { "received SIG#{signal} signal" }
-          Fiber.yield
-          exit
+    def call : Nil
+      @once.call do
+        signals.each do |signal|
+          signal.trap do
+            log.debug { "received SIG#{signal} signal" }
+            Fiber.yield
+            exit
+          end
         end
-      end
 
-      at_exit do
-        stop if running?
-      end
+        at_exit do
+          stop if running?
+        end
 
-      super
+        super
+      end
     end
   end
 
   @@application = Application.new
 
   # Accessor to the `Application` singleton.
-  def self.application
+  def self.application : Application
     @@application
   end
 end

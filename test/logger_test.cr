@@ -61,8 +61,6 @@ module Earl
     end
 
     def test_log_methods
-      # skip "random failures: test alters global Logger configuration"
-
       noop = Noop.new
       loggy = Loggy.new
 

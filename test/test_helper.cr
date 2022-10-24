@@ -1,9 +1,9 @@
 require "minitest/autorun"
 require "../src/earl"
-require "./support/rwlock"
+require "syn/rw_lock"
 
 class Minitest::Test
-  @@rwlock = Earl::RWLock.new
+  @@rwlock = Syn::RWLock.new
 
   def setup
     @@rwlock.lock_read
