@@ -1,4 +1,4 @@
-require "mutex"
+require "./concurrency/unsafe_mutex"
 require "./artist"
 
 module Earl
@@ -24,7 +24,7 @@ module Earl
 
     def initialize(@capacity : Int32)
       @workers = Array(A).new(@capacity)
-      @mutex = Mutex.new
+      @mutex = UnsafeMutex.new
       @done = Channel(Nil).new
     end
 

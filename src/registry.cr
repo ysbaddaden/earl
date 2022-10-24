@@ -1,5 +1,5 @@
-require "mutex"
 require "./agent"
+require "./concurrency/unsafe_mutex"
 
 module Earl
   # A concurrency-safe registry of agents.
@@ -19,7 +19,7 @@ module Earl
   # messages be sent much more often.
   class Registry(A, M)
     def initialize
-      @mutex = Mutex.new
+      @mutex = UnsafeMutex.new
       @subscriptions = [] of A
       @closed = false
     end

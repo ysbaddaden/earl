@@ -1,6 +1,6 @@
 require "minitest/autorun"
 require "../src/earl"
-require "./support/rwlock"
+require "../src/concurrency/rw_lock"
 
 class Minitest::Test
   @@rwlock = Earl::RWLock.new
