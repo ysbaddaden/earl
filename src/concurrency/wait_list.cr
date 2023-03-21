@@ -15,10 +15,17 @@ class Fiber
   # - Thread 2 resumes the Fiber < ERR: trying to resume running fiber
   # - Thread 1 suspends the Fiber
   #
-  # But the current MT implementation ties a Fiber to a thread, so Thread 2
-  # trying to resume the fiber will actually push it back to Thread 1's
-  # queue... which brings other questions (we enqueue a Fiber that hasn't been
-  # suspended, yet).
+  # But the current MT implementation ties a Fiber to a thread, so even if
+  # Thread 2 tried to resume the fiber, it would actually enqueue it back to
+  # Thread 1's queue, which in the worst case is still running the actual Fiber
+  # (and will resume it *later*).
+  #
+  # All this to say that when using a WaitList you must never resume a Fiber
+  # directly, but always enqueue it, so it will be properly resumed (later).
+  #
+  # If Crystal ever implements job stealing, this race conditions will be
+  # present, and the scheduler will have to take care of it (e.g. using
+  # `Fiber#resumable?`.
   #
   # :nodoc:
   @__earl_next : Fiber?
@@ -33,12 +40,12 @@ module Earl
   # other concurrency objects. Implemented as a FIFO list.
   #
   # Assumes that a `Fiber` will only ever be in a single `WaitList` at any given
-  # time, and it will be suspended while it's in the list.
+  # time, and will be suspended while it's in the list.
   #
-  # Note that the tail is only used when head is set to append fibers to the
-  # list, which allows some optimization: no need to check or update it in most
+  # Note that tail is only used when head is set to append fibers to the list,
+  # which allows some optimization: no need to check or update it in most
   # situations (outside of `#push`). We also don't need to clear the
-  # @__earl_next attribute either (it will be overwritten the next time it's
+  # `@__earl_next` attribute either (it will be overwritten the next time it's
   # pushed to a wait list).
   #
   # :nodoc:

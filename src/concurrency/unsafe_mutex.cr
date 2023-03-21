@@ -6,7 +6,7 @@ module Earl
   # An unchecked, Fiber aware, mutually exclusive lock.
   #
   # Prevents two or more fibers to access the same non concurrent piece of code
-  #(e.g. mutating a shared object) at the same time.
+  # (e.g. mutating a shared object) at the same time.
   #
   # This a smaller alternative to the `::Mutex` class in stdlib, that allocates
   # many classes (Deque, Crystal::SpinLock) and has lots of safety checks. The
@@ -28,6 +28,8 @@ module Earl
     #
     # Returns false even if the current fiber had previously acquired the lock,
     # but won't cause a deadlock situation.
+    #
+    # NOTE: the mutex is unchecked!
     def try_lock? : Bool
       @held.test_and_set
     end

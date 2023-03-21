@@ -20,7 +20,7 @@ module Earl
     # Releases the lock, suspends the current Fiber, then acquires the lock
     # again when the fiber is resumed.
     #
-    # The Fiber must be resumed, or enqueued, manually.
+    # The Fiber must be enqueued manually.
     def suspend : Nil
       unlock
       ::sleep

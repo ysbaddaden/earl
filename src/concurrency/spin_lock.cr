@@ -10,6 +10,9 @@ module Earl
   # The implementation is a NOOP unless you specify the `preview_mt` compile
   # flag.
   #
+  # FIXME: add acquire/release memory barriers! See:
+  # https://github.com/crystal-lang/crystal/issues/13010
+  #
   # :nodoc:
   struct SpinLock
     include Lock
