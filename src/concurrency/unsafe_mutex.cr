@@ -19,7 +19,7 @@ module Earl
     include Lock
 
     def initialize
-      @held = Atomic::Flag.new
+      @held = AtomicFlag.new
       @spin = SpinLock.new
       @blocking = WaitList.new
     end

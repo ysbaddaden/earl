@@ -1,4 +1,5 @@
 require "./lock"
+require "./atomic_flag"
 
 module Earl
   # Tries to acquire an atomic lock by spining, trying to avoid slow thread
@@ -10,9 +11,6 @@ module Earl
   # The implementation is a NOOP unless you specify the `preview_mt` compile
   # flag.
   #
-  # FIXME: add acquire/release memory barriers! See:
-  # https://github.com/crystal-lang/crystal/issues/13010
-  #
   # :nodoc:
   struct SpinLock
     include Lock
@@ -21,7 +19,7 @@ module Earl
       # :nodoc:
       THRESHOLD = 100
 
-      @flag = Atomic::Flag.new
+      @flag = AtomicFlag.new
 
       def lock : Nil
         # fast path

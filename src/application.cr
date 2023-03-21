@@ -1,4 +1,5 @@
 require "./supervisor"
+require "./concurrency/atomic_flag"
 
 module Earl
   # A singleton `Supervisor` accessible as `Earl.application` with additional
@@ -15,8 +16,7 @@ module Earl
   class Application < Supervisor
     # :nodoc:
     protected def initialize
-      @flag = Atomic::Flag.new
-
+      @once = Earl::Once.new
       super
     end
 
@@ -29,21 +29,21 @@ module Earl
     # Traps signals. Adds an `at_exit` handler then delegates to `Supervisor`
     # which will block until all supervised actors are asked to terminate.
     def call
-      return unless @flag.test_and_set
-
-      signals.each do |signal|
-        signal.trap do
-          log.debug { "received SIG#{signal} signal" }
-          Fiber.yield
-          exit
+      @once.call do
+        signals.each do |signal|
+          signal.trap do
+            log.debug { "received SIG#{signal} signal" }
+            Fiber.yield
+            exit
+          end
         end
-      end
 
-      at_exit do
-        stop if running?
-      end
+        at_exit do
+          stop if running?
+        end
 
-      super
+        super
+      end
     end
   end
 
