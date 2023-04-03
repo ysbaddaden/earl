@@ -49,11 +49,14 @@ module Earl
     class Runner
       include Agent
 
+      def initialize(@scheduler : Scheduler)
+      end
+
       def call : Nil
         loop do
           now = Time.local
 
-          Earl.scheduler.each_job do |job|
+          @scheduler.each_job do |job|
             if job.time <= now
               job.run(now)
             end
@@ -73,7 +76,7 @@ module Earl
     protected def initialize
       @jobs = [] of JobRunner
       super
-      monitor(Runner.new)
+      monitor(Runner.new(self))
     end
 
     # Schedules an `Agent` to be called at defined intervals.

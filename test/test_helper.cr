@@ -1,6 +1,7 @@
 require "minitest/autorun"
 require "../src/earl"
 require "syn/rw_lock"
+require "./support/timecop"
 
 EXCLUSIVE = Syn::RWLock.new
 

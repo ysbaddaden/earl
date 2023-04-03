@@ -1,4 +1,3 @@
-require "timecop"
 require "../test_helper"
 require "../../src/scheduler/every"
 
