@@ -1,0 +1,34 @@
+name: Continuous Integration
+
+on:
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"
+    branches:
+      - "**"
+
+  pull_request:
+    branches:
+      - "**:**"
+
+  release:
+
+  schedule:
+    - cron: "0 6 * * 1"
+
+jobs:
+  test:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - uses: crystal-lang/install-crystal@v1
+      - run: shards install
+      - run: make test
+
+  test_mt:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - uses: crystal-lang/install-crystal@v1
+      - run: shards install
+      - run: make test CRFLAGS=-Dpreview_mt
