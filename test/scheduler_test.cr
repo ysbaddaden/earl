@@ -12,6 +12,14 @@ class Earl::SchedulerTest < Minitest::Test
     end
   end
 
+  def setup
+    EXCLUSIVE.lock_write
+  end
+
+  def teardown
+    EXCLUSIVE.unlock_write
+  end
+
   def test_add_cron
     scheduler = Scheduler.new
     scheduler.add(Job.new, schedule: CRON.new("*/5 * * * *"))
@@ -66,12 +74,12 @@ class Earl::SchedulerTest < Minitest::Test
 
     scheduler = Scheduler.new
 
-    Timecop.scale(Time.local(2023, 4, 4, 22, 3, 27), 3600) do # 1 second == 1 hour
+    Timecop.scale(Time.local(2023, 4, 4, 22, 3, 27), 1800) do # 1 second == 30 minutes
       scheduler.add(job_17, Every.new(17.minutes))
       scheduler.spawn
       sleep(7.5.minutes)
 
-      Timecop.scale(40.minutes.from_now, 3600) do
+      Timecop.scale(40.minutes.from_now, 1800) do
         sleep(9.5.minutes)
       end
 
@@ -79,9 +87,9 @@ class Earl::SchedulerTest < Minitest::Test
     end
 
     assert_equal [
-      Time.local(2023, 4, 4, 22, 5),  # ran on time
-      Time.local(2023, 4, 4, 22, 51), # should have run sooner: runs immediately on wakeup
-      Time.local(2023, 4, 4, 22, 56), # continues to runs at the initially expected time
+      Time.local(2023, 4, 4, 22, 5, 0),  # ran on time
+      Time.local(2023, 4, 4, 22, 51, 0), # should have run sooner: runs immediately on wakeup
+      Time.local(2023, 4, 4, 22, 56, 0), # continues to runs at the initially expected time
     ], job_17.called.map!(&.at_beginning_of_minute)
   end
 

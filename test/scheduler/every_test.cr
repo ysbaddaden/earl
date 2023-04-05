@@ -2,6 +2,14 @@ require "../test_helper"
 require "../../src/scheduler/every"
 
 class Earl::EveryTest < Minitest::Test
+  def setup
+    EXCLUSIVE.lock_write
+  end
+
+  def teardown
+    EXCLUSIVE.unlock_write
+  end
+
   def test_initializer
     Every.new(1.minute)
     Every.new(30.days)
