@@ -24,14 +24,14 @@ module Earl
 
   class LoggerTest < Minitest::Test
     def setup
-      @@rwlock.lock_write
+      EXCLUSIVE.lock_write
       wait_for_logger
     end
 
     def teardown
       wait_for_logger
     ensure
-      @@rwlock.unlock_write
+      EXCLUSIVE.unlock_write
     end
 
     def test_level

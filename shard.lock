@@ -6,5 +6,5 @@ shards:
 
   syn:
     git: https://github.com/ysbaddaden/syn.git
-    version: 0.1.0+git.commit.c20828a38c21247047044e0db35c9aaf822ab44b
+    version: 0.1.0+git.commit.d87e275f139537d505033eee5b346a878f85cda7
 
