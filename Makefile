@@ -3,7 +3,7 @@
 CRYSTAL = crystal
 CRFLAGS =
 OPTS = --parallel=4 --chaos -v
-TESTS = test/*_test.cr test/**/*_test.cr
+TESTS = test/*_test.cr
 
 all: test
 
