@@ -5,7 +5,7 @@ module Earl
     include Schedulable
 
     def initialize(@every : Time::Span, @since : Time = Time.unix(0))
-      if @every < 1.minutes
+      if @every < 1.minute
         raise ArgumentError.new("Every #{@every} is too short, it must be at least 1 minute")
       end
     end

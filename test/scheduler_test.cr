@@ -86,11 +86,20 @@ class Earl::SchedulerTest < Minitest::Test
       scheduler.stop
     end
 
-    assert_equal [
-      Time.local(2023, 4, 4, 22, 5, 0),  # ran on time
-      Time.local(2023, 4, 4, 22, 51, 0), # should have run sooner: runs immediately on wakeup
-      Time.local(2023, 4, 4, 22, 56, 0), # continues to runs at the initially expected time
-    ], job_17.called.map!(&.at_beginning_of_minute)
+    expected = [
+      Time.local(2023, 4, 4, 22, 5, 0),  # ran on time (every 17 minutes since UNIX epoch)
+      Time.local(2023, 4, 4, 22, 51, 0), # should have at 22:22 and 22:39 but timeskip prevented it: runs immediately on wakeup (once)
+      Time.local(2023, 4, 4, 22, 56, 0), # resumes normal scheduling (every 17 minutes since UNIX epoch)
+    ]
+    assert_equal expected.size, job_17.called.size
+
+    # time scale makes it impossible to assume minute-precision, but it should
+    # always be within the next 2 minutes:
+    expected.size.times do |index|
+      exp = (expected[index] + 60.seconds).to_unix
+      act = job_17.called[index].to_unix
+      assert_in_delta(exp, act, delta: 120.0)
+    end
   end
 
   # def test_schedule_in
