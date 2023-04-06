@@ -2,14 +2,16 @@
 
 CRYSTAL = crystal
 CRFLAGS =
+OPTS = --parallel=4 --chaos -v
+TESTS = test/*_test.cr
 
 all: test
 
-doc: PHONY
+test: .phony
+	$(CRYSTAL) run $(CRFLAGS) $(TESTS) -- $(OPTS)
+
+doc: .phony
 	@mkdir -p doc
 	cd doc && markdown ../SPEC.md > SPEC.html
 
-test: PHONY
-	$(CRYSTAL) run $(CRFLAGS) test/*_test.cr -- $(ARGS)
-
-PHONY:
+.phony:

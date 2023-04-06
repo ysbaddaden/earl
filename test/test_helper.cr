@@ -2,15 +2,15 @@ require "minitest/autorun"
 require "../src/earl"
 require "syn/rw_lock"
 
-class Minitest::Test
-  @@rwlock = Syn::RWLock.new
+EXCLUSIVE = Syn::RWLock.new
 
+class Minitest::Test
   def setup
-    @@rwlock.lock_read
+    EXCLUSIVE.lock_read
   end
 
   def teardown
-    @@rwlock.unlock_read
+    EXCLUSIVE.unlock_read
   end
 
   protected def eventually(timeout : Time::Span = 5.seconds)
