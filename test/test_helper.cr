@@ -1,7 +1,13 @@
 require "minitest/autorun"
 require "../src/earl"
 require "syn/rw_lock"
+require "./support/timecop"
 
+# use a specific local for time related tests to fail because of timezones
+# (e.g. scheduler tests)
+Time::Location.local = Time::Location.load("Europe/Paris")
+
+# some tests can't run in parallel (e.g. timecop affects the global scope)
 EXCLUSIVE = Syn::RWLock.new
 
 class Minitest::Test

@@ -1,9 +1,14 @@
+require "./schedulable"
+
 module Earl
-  class CRON
+  # Parse CRON definitions and reports when the next CRON is expected to run.
+  struct CRON
+    include Schedulable
+
     class ParseError < Exception
     end
 
-    # nodoc
+    # :nodoc:
     EXTENSIONS = {
       "@yearly"   => "0 0 1 1 *",
       "@annually" => "0 0 1 1 *",
@@ -13,7 +18,7 @@ module Earl
       "@hourly"   => "0 * * * *",
     }
 
-    # nodoc
+    # :nodoc:
     MONTHS = {
       "jan" => 1,
       "feb" => 2,
@@ -29,7 +34,7 @@ module Earl
       "dec" => 12,
     }
 
-    # nodoc
+    # :nodoc:
     DAYS = {
       "mon" => 1,
       "tue" => 2,
@@ -40,6 +45,7 @@ module Earl
       "sun" => 7,
     }
 
+    @cron : String
     @minutes : Array(Int32)
     @hours : Array(Int32)
     @days_of_month : Array(Int32)
@@ -58,6 +64,7 @@ module Earl
 
       minute, hour, day_of_month, month, day_of_week = elements
 
+      @cron = cron
       @minutes = parse_field(minute, 0..59)
       @hours = parse_field(hour, 0..23)
       @days_of_month = parse_field(day_of_month, 1..31)
@@ -111,7 +118,9 @@ module Earl
       value
     end
 
-    def next(t = Time.local)
+    # Returns the Time at which the CRON is expected to run depending on the
+    # given Time (defaults to `Time.local`).
+    def next(t = Time.local) : Time
       unless @months.includes?(t.month)
         t = Time.local(*find_next_month_and_day(t), @hours.first, @minutes.first, location: t.location)
         return t if @days_of_week.includes?(t.day_of_week.value)
@@ -201,6 +210,10 @@ module Earl
         @days_of_month == other.@days_of_month &&
         @months == other.@months &&
         @days_of_week == other.@days_of_week
+    end
+
+    def to_s(io : IO)
+      io << "#<Earl::CRON cron=\"" << @cron << "\">"
     end
   end
 end

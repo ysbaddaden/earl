@@ -1,5 +1,5 @@
-require "./test_helper"
-require "../src/cron"
+require "../test_helper"
+require "../../src/scheduler/cron"
 
 class Earl::CRONTest < Minitest::Test
   def test_parse_errors
