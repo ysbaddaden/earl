@@ -47,7 +47,7 @@ module Earl
         rescue ClosedError
           unregister(agent) unless closed?
         rescue ex
-          Logger.error(agent) { "failed to send to registered agent message=#{ex.message} (#{ex.class.name})" }
+          agent.log.error { "failed to send to registered agent message=#{ex.message} (#{ex.class.name})" }
           unregister(agent) unless closed?
         end
       end

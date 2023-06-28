@@ -59,14 +59,13 @@ module Earl
 
       def transition(agent : Agent, new_status : Status) : Nil
         if can_transition?(new_status)
-          Logger.debug(agent) { "transition from=#{@status} to=#{new_status}" }
+          agent.log.debug { "transition from=#{@status} to=#{new_status}" }
           @status = new_status
         else
-          raise TransitionError.new("can't transition agent state from #{@status} to #{new_status}")
+          agent.log.error { "transition error from=#{@status} to=#{new_status}" }
+          raise TransitionError.new("can't transition agent #{agent.class.name} state from #{@status} to #{new_status}")
         end
       end
     end
   end
 end
-
-require "../logger"

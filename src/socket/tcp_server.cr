@@ -5,7 +5,6 @@ module Earl
   # :nodoc:
   class TCPServer
     include Agent
-    include Logger
 
     @server : ::TCPServer?
 
@@ -28,7 +27,7 @@ module Earl
       ::spawn do
         @handler.call(socket)
       rescue ex
-        log.error(ex)
+        log.error(exception: ex) { "error" }
       ensure
         socket.close unless socket.closed?
       end

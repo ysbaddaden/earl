@@ -79,5 +79,10 @@ module Earl
 
       eventually { assert agent.running? }
     end
+
+    def test_log
+      assert_instance_of Log, Noop.log
+      assert_same Noop.log, Noop.new.log
+    end
   end
 end

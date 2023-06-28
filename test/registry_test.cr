@@ -7,7 +7,7 @@ private class Consumer
 
   def call
     while message = receive?
-      log.info "received: #{message}"
+      log.info { "received: #{message}" }
     end
   end
 end

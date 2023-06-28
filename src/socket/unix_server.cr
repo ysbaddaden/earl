@@ -5,7 +5,6 @@ module Earl
   # :nodoc:
   class UNIXServer
     include Agent
-    include Logger
 
     @server : ::UNIXServer?
 
@@ -32,7 +31,7 @@ module Earl
       ::spawn do
         @handler.call(socket)
       rescue ex
-        log.error(ex)
+        log.error(exception: ex) { "error" }
       ensure
         socket.close unless socket.closed?
       end

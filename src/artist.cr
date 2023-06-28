@@ -4,7 +4,6 @@ require "./mailbox"
 module Earl
   # An actor-like agent. It includes the following extension modules:
   # - `Agent`
-  # - `Logger`
   # - `Mailbox(M)`
   #
   # Artists will automatically receive messages (of type `M`) and dispatch them
@@ -14,7 +13,6 @@ module Earl
   module Artist(M)
     macro included
       include Earl::Agent
-      include Earl::Logger
       include Earl::Mailbox(M)
     end
 
