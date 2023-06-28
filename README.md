@@ -291,6 +291,13 @@ Now if the producer crashes, it will be restarted. You can test this by adding a
 random `raise "chaos monkey"` into the `Producer#call` loop. The error will be
 logged, the producer restarted and the application continue running.
 
+#### Dynamic Supervisor
+
+Identical to `Earl::Supervisor` but monitors a dynamic list of agents that can
+be started and stopped at any time during the application lifetime. If a
+monitored agent crashes, it will be restarted, but if it returns normally it
+will be removed from the monitoring list.
+
 #### Pool
 
 The `Earl::Pool(A, M)` agent spawns a fixed size list of agents of type `A`, to
