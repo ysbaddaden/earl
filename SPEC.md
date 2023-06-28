@@ -35,6 +35,11 @@ Earl also provides ready to use agent classes:
   An agent that supervises other agents. It spawns agents in their own fiber and
   restarts them if they crash;
 
+- [`Earl::DynamicSupervisor`](#earldynamicsupervisor)
+
+  Same as `Earl::Supervisor` but monitors a dynamic list of agents to spawn and
+  supervise _after_ the application started.
+
 - [`Earl::Pool`](#earlpool)
 
   An agent that maintains a fixed-size pool of worker agents to dispatch work
@@ -540,14 +545,14 @@ crashed agents, but keeps them stopped if they normally returned. That is, until
 the supervisor itself is asked to stop, or recycled/restarted, which will stop
 or recycle/restart all supervised agents.
 
-Since `Earl::Supervisor` recycles agents, the monitored agents must to implement
+Since `Earl::Supervisor` recycles agents, the monitored agents must implement
 the `#reset` hook to return themselves into their starting state.
 
 - `#monitor(agent)`
 
   Tells the supervisor to monitor an *agent*. Agents must be registered while
   the supervisor is still in its starting state. Raises an `ArgumentError`
-  exception if the supervisor has already been started.
+  exception if the supervisor or the agent to monitor has already been started.
 
 #### Example
 
@@ -568,8 +573,45 @@ end
 
 supervisor = Supervisor.new
 supervisor.monitor(Foo.new)
-supervisor.monitor
-Bar.new
+supervisor.monitor(Bar.new)
+
+Signal::INT.trap { supervisor.stop }
+supervisor.start
+```
+
+### Earl::DynamicSupervisor
+
+Identical to `Earl::Supervisor` but monitors a dynamic list of agents that can
+be started and stopped at any time during the execution of a program.
+
+Dynamic supervisors spawn each agent in their own fiber. They recycle and
+restart crashed agents, but removes them from supervision if they normally
+returned.
+
+Since `Earl::DynamicSupervisor` recycles agents, the monitored agents must
+implement the `#reset` hook to return themselves into their starting state.
+
+- `#monitor(agent)`
+
+  Tells the supervisor to monitor an *agent*. Agents must be registered after
+  the supervisor has been started. Raises an `ArgumentError` exception if the
+  supervisor hasn't been started or the agent to monitor has already been
+  started.
+
+#### Example
+
+```ruby
+class Foo
+  include Earl::Artist(Int32)
+
+  def call(number)
+  end
+end
+
+supervisor = Supervisor.new
+supervisor.spawn
+
+supervisor.monitor(Foo.new)
 
 Signal::INT.trap { supervisor.stop }
 supervisor.start
