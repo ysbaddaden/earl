@@ -11,7 +11,7 @@ class EchoServer < Earl::SockServer
   end
 end
 
-Earl::Logger.level = Earl::Logger::Severity::DEBUG
+Log.setup(:debug)
 
 server = EchoServer.new
 server.add_tcp_listener("::", 9292)

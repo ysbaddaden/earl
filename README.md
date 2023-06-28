@@ -132,7 +132,6 @@ end
 
 class B
   include Earl::Agent
-  include Earl::Logger
 
   def call
     # ...

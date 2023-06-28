@@ -6,10 +6,6 @@ Earl agents are a set of modules that can be mixed into classes:
 
   Core module, handles the agent's lifecycle (e.g.  started, stopped, crashed);
 
-- [`Earl::Logger`](#earllogger)
-
-  Extension module, adds logging capabilities to an agent;
-
 - [`Earl::Mailbox`](#earlmailbox)
 
   Extension module, adds a mailbox to an agent;
@@ -163,6 +159,10 @@ in that state. They return `false` otherwise:
 - `#crashed?`
 - `#recycling?`
 
+- `#log`
+
+  An accessor for the agents' `Log` (one per class).
+
 ### Example
 
 ```ruby
@@ -198,9 +198,9 @@ end
 ## Earl::Artist
 
 The `Earl::Artist(M)` module is an [`Earl::Agent`](#earlagent). It includes
-[`Earl::Logger`](#earllogger) and [`Earl::Mailbox(M)`](#earlmailbox). It also
-implements a `#call` hook to loop on received messages, dispatched to the
-`#call(message)` methods that the artist must implement.
+[`Earl::Mailbox(M)`](#earlmailbox). It also implements a `#call` hook to loop on
+received messages, dispatched to the `#call(message)` methods that the artist
+must implement.
 
 The artist may have as many `#call(message)` overloads as needed. A single
 overload or as many as the `M` union type defines for example.
@@ -253,73 +253,6 @@ inadvertently altering the control-flow, leaking resources, ...
 
 Extension modules should follow the structure and design of existing agents and
 extensions, to avoid introducing conflicting patterns (namings, hooks, methods).
-
-### Earl::Logger
-
-The `Earl::Logger` module is both an Agent and an extension module.
-
-The Agent must always be started (and supervised), usually by starting (or
-spawning) `Earl.application`.
-
-The agent handles the actual log of messages to backends. The module has class
-methods to check whether a severity will be logged (e.g. `Earl::Logger.info?`),
-and methods to log messages for an Agent (e.g. `.info(agent, message)` or
-`.warn(agent) { message }`).
-
-The extension module should only be included in classes that already include
-[`Earl::Agent`](#earlagent). It provides a single method that wraps the Logger
-class methods for the Agent (`e.g.` `log.info?` or `log.error { message }`).
-
-Messages can be logged with a severity level. Messages greater or equal to this
-level will be logged, messages below this severity level will be skipped. The
-severity levels can be found in the `Earl::Logger::Severity` enum:
-
-- `DEBUG`  —additional messages meant for debug purposes only;
-- `INFO`   —normal information (default level);
-- `WARN`   —report expected failures;
-- `ERROR`  —report crashes and unexpected behavior;
-
-One additional severity, `SILENT`, is available to disable the logger.
-
-The module is configured with the following class methods:
-
-- `.level=(severity)`
-
-  Changes the minimal severity level. Defaults to `INFO`.
-
-- `.backends`
-
-  Accessor to an array of backends to write logged messages to. You can add or
-  remove backends, but the array isn't concurrency safe. Backends should be
-  configured before the application is started.
-
-  The `Earl::Logger::ConsoleBackend` is available to write logs to any IO
-  object. The console backend is enabled by default and writes to `STDOUT`.
-
-  Custom backends can be created. They must extend the `Earl::Logger::Backend`
-  class and implement the `#write(severity, agent, time, message)` abstract
-  method.
-
-The module adds the `#log` method to agents, which has three methods for each
-severity. For example the `INFO` severity:
-
-  - `#info?`
-
-    Returns true if `INFO` messages are logged, that is if the configured
-    severity level is `INFO` or lower (i.e. `VERBOSE` or `DEBUG`). Returns false
-    otherwise.
-
-  - `#info(message)`
-
-    Logs message if the configured severity level is `INFO` or lower. Skips the
-    message otherwise.
-
-  - `#info { message }`
-
-    Identical to `#info(message)` but delays the message evaluation. The block
-    will only be evaluated if the configured level severity is `INFO` or lower.
-    This method avoids allocating memory just to throw it away because `INFO`
-    messages are skipped.
 
 ### Earl::Mailbox
 
@@ -517,9 +450,8 @@ The `Earl.application` object is a [`Earl::Supervisor`](#earlsupervisor)
 singleton suited for running programs. It traps some POSIX signals (e.g.
 `SIGINT` and `SIGTERM`) and adds an `at_exit` handler to stop supervised agents.
 
-Some agents can require `Earl.application` to be started —for example
-[`Earl::Logger`](#earllogger) does. Libraries can also assume it will be started
-and leverage it to have their agents monitored.
+Some agents can require `Earl.application` to be started. Libraries can also
+assume it will be started and leverage it to have their agents monitored.
 
 `Earl.application` can be spawned in the background then forgotten, but we
 advise to leverage it as the main supervisor for your program.

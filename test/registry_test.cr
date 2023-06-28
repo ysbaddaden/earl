@@ -2,7 +2,6 @@ require "./test_helper"
 
 private class Consumer
   include Earl::Agent
-  include Earl::Logger
   include Earl::Mailbox(Int32)
 
   def call

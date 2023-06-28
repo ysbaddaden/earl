@@ -9,6 +9,9 @@ module Earl
     # dynamic supervisor will always keep a reference to the agent until the
     # agent is explicitely stopped.
     #
+    # TODO: implement a custom supervisor to monitor agents that may be used
+    #       before the earl application starts (?)
+    #
     # :nodoc:
     class Dispatcher
       include ::Log::Dispatcher
