@@ -271,8 +271,8 @@ to check for `running?`.
 
 - `#mailbox=`
 
-  Direct accessor to swap the underlying `Channel(M)` object. The mailbox won't
-  be closed anymore when the agent is stopped, since the mailbox is now
+  Direct accessor to swap the underlying `Earl::Queue(M)` object. The mailbox
+  won't be closed anymore when the agent is stopped, since the mailbox is now
   considered to be shared.
 
   Despite having direct accessors to the mailbox, external agents aren't
@@ -522,7 +522,7 @@ to stop.
 
 If a pool is itself supervised by an [`Earl::Supervisor`](#earlsupervisor)
 agent, and the pool crashes, the supervisor will recycle and restart it, with
-the original channel kept open. Pending messages will be dispatched once the
+the original mailbox kept open. Pending messages will be dispatched once the
 pool workers are restarted.
 
 - `.new(capacity)`

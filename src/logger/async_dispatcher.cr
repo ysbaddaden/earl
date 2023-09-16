@@ -4,7 +4,7 @@ module Earl
   module Logger
     # Alternative to `Log::AsyncDispatcher` as an `Earl::Agent` that can be
     # supervised.
-    #
+
     # :nodoc:
     class AsyncDispatcher
       include ::Log::Dispatcher
@@ -14,7 +14,7 @@ module Earl
       def initialize
         # never close the mailbox: logs sent while the program ends could raise
         # an exception because the mailbox is closed!
-        @mailbox_close_on_stop = false
+        @mailbox.close_on_stop = false
       end
 
       def finalize
@@ -39,9 +39,7 @@ module Earl
 
       def terminate : Nil
         # wait until all log messages have been processed before returning
-        queue = @mailbox.@queue.not_nil!
-
-        until queue.empty?
+        until @mailbox.empty?
           sleep(0.seconds)
         end
       end
