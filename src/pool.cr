@@ -34,7 +34,7 @@ module Earl
     def call
       @capacity.times do
         ::spawn do
-          agent = new_agent
+          agent = A.new
           @mutex.synchronize { @workers << agent }
 
           while agent.starting?
@@ -46,12 +46,6 @@ module Earl
       end
 
       @group.wait
-    end
-
-    # Override if you need to initialize your workers with non-default
-    # arguments.
-    def new_agent : A
-      A.new
     end
 
     def call(message : M)
