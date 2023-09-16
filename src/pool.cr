@@ -1,4 +1,5 @@
 require "syn/core/mutex"
+require "syn/core/wait_group"
 require "./artist"
 
 module Earl
@@ -25,15 +26,15 @@ module Earl
     def initialize(@capacity : Int32)
       @workers = Array(A).new(@capacity)
       @mutex = Syn::Core::Mutex.new(:unchecked)
-      @done = Channel(Nil).new
+      @group = Syn::Core::WaitGroup.new(@capacity)
     end
 
     # Spawns workers in their dedicated `Fiber`. Blocks until all workers have
     # stopped.
     def call
       @capacity.times do
-        spawn do
-          agent = A.new
+        ::spawn do
+          agent = new_agent
           @mutex.synchronize { @workers << agent }
 
           while agent.starting?
@@ -44,11 +45,13 @@ module Earl
         end
       end
 
-      @done.receive?
+      @group.wait
+    end
 
-      until @workers.empty?
-        Fiber.yield
-      end
+    # Override if you need to initialize your workers with non-default
+    # arguments.
+    def new_agent : A
+      A.new
     end
 
     def call(message : M)
@@ -68,6 +71,7 @@ module Earl
         return agent.recycle
       end
 
+      @group.done
       @mutex.synchronize { @workers.delete(agent) }
     end
 
@@ -76,10 +80,11 @@ module Earl
       @workers.each do |agent|
         agent.stop rescue nil
       end
+    end
 
-      unless @done.closed?
-        @done.close
-      end
+    def recycle : Nil
+      @workers.clear
+      @group = Syn::Core::WaitGroup.new(@capacity)
     end
   end
 end
