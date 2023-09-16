@@ -1,5 +1,6 @@
-require "./supervisor"
 require "syn/core/once"
+require "./core_ext/crystal_at_exit_handlers"
+require "./supervisor"
 
 module Earl
   # A singleton `Supervisor` accessible as `Earl.application` with additional
@@ -8,19 +9,15 @@ module Earl
   # - traps the SIGINT and SIGTERM signals to exit cleanly;
   # - adds an `at_exit` handler to ask supervised agents to stop gracefully.
   #
-  # The `Logger` agent, among other possible agents, expect that
-  # `Earl.application` will be started. Programs must always start it. Either
-  # spawned in the background (and forgotten) or leveraged to monitor the
-  # program agents, and block the main `Fiber` until the program is told to
-  # terminate.
+  # Programs must always start `Earl::Application`; some Earl agents (e.g. log
+  # agents) expect that `Earl.application` will be started. It can be spawned
+  # in the background (and forgotten) or better: be leveraged to monitor the
+  # program's agents and block the main `Fiber` until the program is told to
+  # terminate, which is recommended.
   #
   # TODO: support windows
   class Application < Supervisor
-    # :nodoc:
-    protected def initialize
-      @once = Syn::Core::Once.new
-      super
-    end
+    @once = Syn::Core::Once.new
 
     # List of POSIX signals to trap. Defaults to `SIGINT` and `SIGTERM`. The
     # list may only be mutated prior to starting the application!
@@ -35,12 +32,15 @@ module Earl
         signals.each do |signal|
           signal.trap do
             log.debug { "received SIG#{signal} signal" }
-            Fiber.yield
+            sleep(0.seconds)
             exit
           end
         end
 
-        at_exit do
+        # At exit handlers are run in reverse order, but we need this handler to
+        # run after previously setup handler have been set (e.g.
+        # minitest/autorun), so we prepend it the list.
+        Crystal::AtExitHandlers.__earl_prepend do
           stop if running?
         end
 
@@ -49,10 +49,6 @@ module Earl
     end
   end
 
-  @@application = Application.new
-
   # Accessor to the `Application` singleton.
-  def self.application : Application
-    @@application
-  end
+  class_getter application : Application = Application.new
 end

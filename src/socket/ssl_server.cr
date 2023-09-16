@@ -6,7 +6,6 @@ module Earl
   # :nodoc:
   class SSLServer
     include Agent
-    include Logger
 
     @server : ::TCPServer?
 
@@ -30,7 +29,7 @@ module Earl
         ssl_socket = OpenSSL::SSL::Socket::Server.new(tcp_socket, @ssl_context, sync_close: true) rescue nil
         @handler.call(ssl_socket) if ssl_socket
       rescue ex
-        log.error(ex)
+        log.error(exception: ex) { "error" }
       ensure
         ssl_socket.close if ssl_socket && !ssl_socket.closed?
         tcp_socket.close unless tcp_socket.closed?

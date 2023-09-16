@@ -4,7 +4,7 @@ private class Worker
   include Earl::Artist(Int32)
 
   def call(message)
-    log.info "received #{message}"
+    log.info { "received #{message}" }
     sleep 0
     raise "chaos monkey" if rand(0..9) == 1
   end

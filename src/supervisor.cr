@@ -18,7 +18,6 @@ module Earl
   # - Eventually stops when all agents have stopped.
   class Supervisor
     include Agent
-    include Logger
 
     def initialize
       @agents = [] of Agent
@@ -26,7 +25,8 @@ module Earl
       @group = Syn::Core::WaitGroup.new
     end
 
-    # Adds an agent to supervise.
+    # Adds an agent to supervise. The agent will be started when the supervisor
+    # is started.
     def monitor(agent : Agent) : Nil
       raise ArgumentError.new("agents must be monitored before starting the supervisor") unless starting?
       raise ArgumentError.new("can't monitor running agents") unless agent.starting?
@@ -63,8 +63,8 @@ module Earl
     # Recycles and restarts crashed agents. Take note that an agent has stopped.
     def trap(agent : Agent, exception : Exception?) : Nil
       if exception
-        Logger.error(agent, exception)
-        log.error { "#{agent.class.name} crashed (#{exception.class.name})" }
+        agent.log.error(exception: exception) { "error" }
+        log.error { "worker crashed (#{exception.class.name})" }
 
         if running?
           agent.recycle

@@ -58,7 +58,7 @@ module Earl
     # Recycles and restarts crashed and unexpectedly stopped agents.
     def trap(agent : A, exception : Exception?) : Nil
       if exception
-        Logger.error(agent, exception)
+        agent.log.error(exception: exception) { "error" }
         log.error { "worker crashed (#{exception.class.name})" }
       elsif agent.running?
         log.warn { "worker stopped unexpectedly" }

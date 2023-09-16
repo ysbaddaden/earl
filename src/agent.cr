@@ -1,3 +1,4 @@
+require "log"
 require "./agent/state"
 
 module Earl
@@ -10,6 +11,10 @@ module Earl
   # life. See `Status` for the different statuses. Agents can act upon their
   # state, for example loop while `.running?` returns true.
   module Agent
+    macro included
+      class_getter log = Log.for(self)
+    end
+
     @state = State.new
 
     # Starts the agent in the current `Fiber`. Blocks until the agent is
@@ -97,6 +102,10 @@ module Earl
 
     def recycling? : Bool
       @state.value.recycling?
+    end
+
+    def log : Log
+      self.class.log
     end
   end
 end

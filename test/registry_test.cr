@@ -2,12 +2,11 @@ require "./test_helper"
 
 private class Consumer
   include Earl::Agent
-  include Earl::Logger
   include Earl::Mailbox(Int32)
 
   def call
     while message = receive?
-      log.info "received: #{message}"
+      log.info { "received: #{message}" }
     end
   end
 end

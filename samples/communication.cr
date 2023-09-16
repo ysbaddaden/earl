@@ -4,7 +4,7 @@ class Foo
   include Earl::Artist(Int32 | String)
 
   def call(message : String)
-    log.info [:string, message].inspect
+    log.info { [:string, message].inspect }
   end
 
   def call(message : Int32)
@@ -26,6 +26,8 @@ class Bar
     end
   end
 end
+
+Log.setup_from_env
 
 # create agents:
 foo = Foo.new

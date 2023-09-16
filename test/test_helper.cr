@@ -37,9 +37,9 @@ class Minitest::Test
 end
 
 {% if flag?(:DEBUG) %}
-  Earl::Logger.level = Earl::Logger::Severity::DEBUG
+  Log.setup(:debug)
 {% else %}
-  Earl::Logger.level = Earl::Logger::Severity::SILENT
+  Log.setup(:none)
 {% end %}
 
 STDOUT.sync = true

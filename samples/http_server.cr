@@ -1,6 +1,6 @@
 require "../src/http_server"
 
-Earl::Logger.level = Earl::Logger::Severity::DEBUG
+Log.setup(:debug)
 
 server = Earl::HTTPServer.new do |context|
   context.response.status_code = 404
