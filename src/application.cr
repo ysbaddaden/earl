@@ -11,7 +11,7 @@ module Earl
   #
   # Programs must always start `Earl::Application`; some Earl agents (e.g. log
   # agents) expect that `Earl.application` will be started. It can be spawned
-  # in the background (and forgotten) or better be leveraged to monitor the
+  # in the background (and forgotten) or better: be leveraged to monitor the
   # program's agents and block the main `Fiber` until the program is told to
   # terminate, which is recommended.
   #
@@ -32,7 +32,7 @@ module Earl
         signals.each do |signal|
           signal.trap do
             log.debug { "received SIG#{signal} signal" }
-            Fiber.yield
+            sleep(0.seconds)
             exit
           end
         end
@@ -49,10 +49,6 @@ module Earl
     end
   end
 
-  @@application = Application.new
-
   # Accessor to the `Application` singleton.
-  def self.application : Application
-    @@application
-  end
+  class_getter application : Application = Application.new
 end
