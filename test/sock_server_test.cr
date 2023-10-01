@@ -1,5 +1,6 @@
 require "./test_helper"
 require "../src/sock_server"
+require "syn/core/wait_list"
 
 private class EchoServer < Earl::SockServer
   def call(socket : Earl::Socket) : Nil
@@ -26,7 +27,7 @@ module Earl
       server.spawn
       eventually { assert server.started? }
 
-      done = Channel(Nil).new
+      group = Syn::Core::WaitGroup.new(3)
 
       spawn do
         TCPSocket.open("127.0.0.1", 9494) do |socket|
@@ -34,7 +35,7 @@ module Earl
           999.times { |i| socket.puts "hello julien #{i} (TCP)" }
           999.times { |i| assert_equal "hello julien #{i} (TCP)", socket.gets }
         end
-        done.send(nil)
+        group.done
       end
 
       spawn do
@@ -51,7 +52,7 @@ module Earl
             end
           end
         end
-        done.send(nil)
+        group.done
       end
 
       spawn do
@@ -61,10 +62,10 @@ module Earl
             assert_equal "hello julien #{i} (UNIX)", socket.gets
           end
         end
-        done.send(nil)
+        group.done
       end
 
-      3.times { done.receive }
+      group.wait
 
       server.stop
     end
