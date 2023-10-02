@@ -1,4 +1,5 @@
 require "./agent"
+require "./queue"
 
 module Earl
   # Extends an agent with a mailbox that receives messages of type `M`.
@@ -7,37 +8,42 @@ module Earl
   # take messages from the mailbox —undocumented because they're `protected`.
   module Mailbox(M)
     macro included
-      @mailbox = Channel(M).new(10)
-      @mailbox_close_on_stop = true
+      @mailbox = Earl::Queue(M).new
     end
 
     # Replaces the mailbox. The mailbox won't be closed automatically when the
     # agent is asked to stop.
-    def mailbox=(@mailbox : Channel(M)) : Channel(M)
-      @mailbox_close_on_stop = false
+    def mailbox=(@mailbox : Queue(M)) : Queue(M)
+      @mailbox.close_on_stop = false
       @mailbox
     end
 
-    # Send a message to the `Agent`. Raises if the mailbox is closed.
+    # Sends a message to this `Agent`. Raises `ClosedError` if the mailbox is closed.
+    @[AlwaysInline]
     def send(message : M) : Nil
-      raise ClosedError.new if @mailbox.closed?
       @mailbox.send(message)
     end
 
-    # Takes a previously received message. Raises if the mailbox is closed.
+    # Takes a previously received message. Raises `ClosedError` if the mailbox is closed.
+    @[AlwaysInline]
     protected def receive : M
-      @mailbox.receive? || raise ClosedError.new
+      @mailbox.receive
     end
 
     # Takes a previously received message. Returns `nil` if the mailbox is closed.
+    @[AlwaysInline]
     protected def receive? : M?
       @mailbox.receive?
     end
 
     # :nodoc:
     def stop : Nil
-      @mailbox.close if @mailbox_close_on_stop
       super
+      @mailbox.close if @mailbox.close_on_stop?
     end
+
+    # protected def reset_mailbox : Nil
+    #   @mailbox = Queue(M).new(10)
+    # end
   end
 end

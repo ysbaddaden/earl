@@ -168,14 +168,12 @@ properly reset themselves.
 
 #### Mailbox
 
-The `Earl::Mailbox(M)` module extends an agent with a `Channel(M)` along with
-methods to `#send(M)` a message to an agent and to receive them (concurrency
-safe).
+The `Earl::Mailbox(M)` module extends an agent with a queue of `M` messages
+along with methods to `#send(M)` a message to an agent and to receive them
+(concurrency safe).
 
-The module merely wraps a `Channel(M)` but proposes a standard structure for
-agents to have an incoming mailbox of messages. All agents thus behave the
-same, and we can assume that an agent that expects to receive messages has a
-`#send(M)` method.
+The goal is to provide a structured way for agents to communicate. No need to
+spawn and share channels, you directly send a message to an agent for example.
 
 An agent's mailbox will be closed when the agent is asked to stop. An agent can
 simply loop over `#receive?` until it returns `nil`, without having to check for
@@ -305,7 +303,8 @@ I.e. they include `Earl::Mailbox(M)` or `Earl::Artist(M)`. They must also
 override their `#reset` method to properly reset an agent.
 
 Note that `Earl::Pool` will replace the workers' mailbox. All workers then share
-a single `Channel(M)` for an exactly-once delivery of messages.
+a single mailbox for an exactly-once delivery of messages (only one worker will
+receive the message).
 
 For example:
 

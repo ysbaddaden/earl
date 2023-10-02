@@ -10,11 +10,11 @@ module Earl
   #
   # ### Workers
   #
-  # Crashed and unexpectedly stopped workers will be recycled and restarted,
-  # until the pool is asked to stop.
+  # Workers are permanent: crashed and unexpectedly stopped workers will be
+  # recycled and restarted until the pool itself is told to stop.
   #
   # Worker agents can return as soon as possible when asked to stop, or keep
-  # processing their mailbox until its empty.
+  # processing their mailbox until there is nothing left to do (your choice).
   #
   # ### Mailbox
   #
