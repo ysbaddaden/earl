@@ -7,10 +7,6 @@ authors:
 description: |
   Service objects for Crystal (Agents, Artists, Supervisors, Pools, ...)
 
-dependencies:
-  syn:
-    github: ysbaddaden/syn
-
 development_dependencies:
   minitest:
     github: ysbaddaden/minitest.cr

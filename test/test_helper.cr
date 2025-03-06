@@ -1,6 +1,6 @@
 require "minitest/autorun"
 require "../src/earl"
-require "syn/rw_lock"
+require "./support/rwlock"
 require "./support/timecop"
 
 # use a specific local for time related tests to fail because of timezones
@@ -8,7 +8,7 @@ require "./support/timecop"
 Time::Location.local = Time::Location.load("Europe/Paris")
 
 # some tests can't run in parallel (e.g. timecop affects the global scope)
-EXCLUSIVE = Syn::RWLock.new
+EXCLUSIVE = Earl::RWLock.new
 
 class Minitest::Test
   def setup
@@ -23,7 +23,7 @@ class Minitest::Test
     start = Time.monotonic
 
     loop do
-      sleep(0)
+      sleep(0.seconds)
 
       begin
         yield
@@ -36,11 +36,7 @@ class Minitest::Test
   end
 end
 
-{% if flag?(:DEBUG) %}
-  Log.setup(:debug)
-{% else %}
-  Log.setup(:none)
-{% end %}
-
+Log.setup_from_env(default_level: :none)
 STDOUT.sync = true
+
 Earl.application.spawn

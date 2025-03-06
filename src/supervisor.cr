@@ -1,5 +1,5 @@
-require "syn/core/mutex"
-require "syn/core/wait_group"
+require "mutex"
+require "wait_group"
 require "./agent"
 
 module Earl
@@ -21,8 +21,8 @@ module Earl
 
     def initialize
       @agents = [] of Agent
-      @mutex = Syn::Core::Mutex.new
-      @group = Syn::Core::WaitGroup.new
+      @mutex = Mutex.new
+      @group = WaitGroup.new
     end
 
     # Adds an agent to supervise. The agent will be started when the supervisor
@@ -85,7 +85,7 @@ module Earl
 
     # Recycles all supervised agents.
     def reset : Nil
-      @group = Syn::Core::WaitGroup.new
+      @group = WaitGroup.new
       @agents.each(&.recycle)
     end
   end

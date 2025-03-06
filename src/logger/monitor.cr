@@ -1,4 +1,4 @@
-require "syn/core/wait_group"
+require "wait_group"
 
 module Earl
   # :nodoc:
@@ -20,7 +20,7 @@ module Earl
       include Earl::Agent
 
       def initialize
-        @group = Syn::Core::WaitGroup.new(1)
+        @group = WaitGroup.new(1)
       end
 
       def call : Nil
@@ -47,7 +47,7 @@ module Earl
       end
 
       def recycle : Nil
-        @group = Syn::Core::WaitGroup.new(1)
+        @group = WaitGroup.new(1)
       end
     end
   end

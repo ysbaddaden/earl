@@ -1,6 +1,6 @@
 require "./test_helper"
 require "../src/sock_server"
-require "syn/core/wait_list"
+require "wait_group"
 
 private class EchoServer < Earl::SockServer
   def call(socket : Earl::Socket) : Nil
@@ -27,7 +27,7 @@ module Earl
       server.spawn
       eventually { assert server.started? }
 
-      group = Syn::Core::WaitGroup.new(3)
+      group = WaitGroup.new(3)
 
       spawn do
         TCPSocket.open("127.0.0.1", 9494) do |socket|

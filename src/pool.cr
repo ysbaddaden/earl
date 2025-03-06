@@ -1,5 +1,5 @@
-require "syn/core/mutex"
-require "syn/core/wait_group"
+require "mutex"
+require "wait_group"
 require "./artist"
 
 module Earl
@@ -25,8 +25,8 @@ module Earl
 
     def initialize(@capacity : Int32)
       @workers = Array(A).new(@capacity)
-      @mutex = Syn::Core::Mutex.new(:unchecked)
-      @group = Syn::Core::WaitGroup.new(@capacity)
+      @mutex = Mutex.new(:unchecked)
+      @group = WaitGroup.new(@capacity)
     end
 
     # Spawns workers in their dedicated `Fiber`. Blocks until all workers have
@@ -78,7 +78,7 @@ module Earl
 
     def recycle : Nil
       @workers.clear
-      @group = Syn::Core::WaitGroup.new(@capacity)
+      @group = WaitGroup.new(@capacity)
     end
   end
 end

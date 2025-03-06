@@ -1,4 +1,4 @@
-require "syn/core/mutex"
+require "mutex"
 require "./agent"
 
 module Earl
@@ -19,7 +19,7 @@ module Earl
   # messages be sent much more often.
   class Registry(A, M)
     def initialize
-      @mutex = Syn::Core::Mutex.new(:unchecked)
+      @mutex = Mutex.new(:unchecked)
       @subscriptions = [] of A
       @closed = false
     end
