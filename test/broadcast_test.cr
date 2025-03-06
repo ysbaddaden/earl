@@ -15,36 +15,36 @@ private class Producer
   include Earl::Agent
 
   def initialize
-    @registry = Earl::Registry(Consumer, Int32).new
+    @broadcast = Earl::Broadcast(Consumer, Int32).new
   end
 
-  def register(agent)
-    @registry.register(agent)
+  def subscribe(agent)
+    @broadcast.subscribe(agent)
   end
 
-  def unregister(agent)
-    @registry.unregister(agent)
+  def unsubscribe(agent)
+    @broadcast.unsubscribe(agent)
   end
 
   def call
     0.upto(999) do |i|
-      @registry.send(i)
+      @broadcast.send(i)
     end
   end
 
   def terminate
-    @registry.stop
+    @broadcast.close
   end
 end
 
 module Earl
-  class RegistryTest < Minitest::Test
+  class BroadcastTest < Minitest::Test
     def test_registry
       producer = Producer.new
 
       5.times do
         consumer = Consumer.new
-        producer.register(consumer)
+        producer.subscribe(consumer)
         consumer.spawn
       end
 
