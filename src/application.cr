@@ -14,6 +14,8 @@ module Earl
   #
   # TODO: support Windows
   class Application < Supervisor
+    class_getter log = Log.for(self)
+
     @once = Atomic(Bool).new(false)
 
     # Application is a singleton object.
