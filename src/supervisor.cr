@@ -19,8 +19,20 @@ module Earl
   class Supervisor
     include Agent
 
+    # :nodoc:
+    class Supervised
+      getter agent : Agent
+
+      def initialize(@agent)
+      end
+
+      def ==(other : Agent) : Bool
+        @agent == other
+      end
+    end
+
     def initialize
-      @agents = [] of Agent
+      @agents = [] of Supervised
       @mutex = Mutex.new
       @group = WaitGroup.new
     end
@@ -39,7 +51,7 @@ module Earl
     protected def monitor?(agent : Agent) : String?
       @mutex.synchronize do
         return "can't monitor the same agent twice" if @agents.includes?(agent)
-        @agents << agent
+        @agents << Supervised.new(agent)
         nil
       end
     end
@@ -47,12 +59,13 @@ module Earl
     # Spawns all agents to supervise in their dedicated `Fiber`. Blocks until
     # all agents have stopped.
     def call : Nil
-      @agents.each { |agent| spawn_agent(agent) }
+      @agents.each { |supervised| spawn_agent(supervised) }
       @group.wait
     end
 
-    protected def spawn_agent(agent : Agent) : Nil
+    protected def spawn_agent(supervised : Supervised) : Nil
       ::spawn do
+        agent = supervised.agent
         while running? && agent.starting?
           agent.start(link: self)
         end
@@ -78,7 +91,8 @@ module Earl
 
     # Asks all supervised agents to stop.
     def terminate : Nil
-      @agents.reverse_each do |agent|
+      @agents.reverse_each do |supervised|
+        agent = supervised.agent
         agent.stop if agent.running?
       end
     end
@@ -86,7 +100,7 @@ module Earl
     # Recycles all supervised agents.
     def reset : Nil
       @group = WaitGroup.new
-      @agents.each(&.recycle)
+      @agents.each(&.agent.recycle)
     end
   end
 end

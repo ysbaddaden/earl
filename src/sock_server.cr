@@ -123,7 +123,9 @@ module Earl
     end
 
     def started? : Bool
-      running? && @agents.all? do |agent|
+      running? && @agents.all? do |supervised|
+        agent = supervised.agent
+
         if agent.responds_to?(:started?)
           agent.started? # either TCPServer, UNIXServer an SSLServer
         else
