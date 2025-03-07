@@ -43,7 +43,7 @@ module Earl
       assert_equal 2, counter.receive
 
       counter.spawn
-      sleep 10.milliseconds
+      eventually { counter.running? }
       counter.stop
 
       assert_raises(ClosedError) { counter.receive }
