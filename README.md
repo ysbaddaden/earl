@@ -69,8 +69,7 @@ end
 Earl monitors the agent's state, and provides facilities to start and stop
 agents, to trap an agent crash or normal stop, as well as recycling them.
 
-Communication (`Earl::Mailbox`) and broadcasting (`Earl::Registry`) are opt-in
-extensions, and introduced below.
+Communication (`Earl::Mailbox`) is an opt-in extension, and introduced below.
 
 #### Start Agents
 
@@ -181,79 +180,6 @@ An agent's mailbox will be closed when the agent is asked to stop. An agent can
 simply loop over `#receive?` until it returns `nil`, without having to check for
 the agent's state.
 
-See the *Registry* section below for an example.
-
-
-#### Registry
-
-The `Earl::Registry(A, M)` module will extend an agent to `#register` and
-`#unregister` agents of type `A` that can receive messages of type `M`. The
-agents to register must be capable to receive messages of type `M` —i.e. include
-`Earl::Mailbox(M)` or `Earl::Artist(M)`). When running, the agent can broadcast
-a message to all registered agents. It can also ask registered agents to stop.
-
-For example, we can declare a `Consumer` agent that receives a count and prints
-it, until it's asked to stop:
-
-```crystal
-class Consumer
-  include Earl::Agent
-  include Earl::Mailbox(Int32)
-
-  def call
-    while count = message.receive?
-      p count
-    end
-  end
-end
-```
-
-Now we can declare a producer that will broadcast numbers to registered
-consumers:
-
-```crystal
-class Producer
-  include Earl::Agent
-  include Earl::Registry(Consumer, Int32)
-
-  @count = 0
-
-  def call
-    while running?
-      registry.send(@count += 1)
-    end
-  end
-
-  def terminate
-    registry.stop
-  end
-end
-```
-
-Now, we can create our producer and consumer agents, and register the consumers
-to the producer. We spawn the consumers that will start in their dedicated
-fiber. Last, we start the producer in the current fiber, that will block until
-we hit `Ctrl+C` to interrupt the program:
-
-```crystal
-producer = Producer.new
-
-a = Consumer.new
-producer.register(a)
-a.spawn
-
-b = Consumer.new
-producer.register(b)
-b.spawn
-
-Signal::INT.trap { producer.stop }
-producer.start
-```
-
-The example registers consumers before starting the produce, but the registry
-is concurrency-safe. Consumers can be added and removed at any time.
-
-
 ### Specific Agents
 
 #### Supervisor
@@ -266,7 +192,7 @@ in its own fiber.
 A supervisor can keep indefinitely running concurrent agents. It can also
 prevent the main thread from exiting.
 
-For example, let's supervise the `Producer` example from the *Registry* section:
+For example:
 
 ```crystal
 supervisor = Supervisor.new
@@ -276,26 +202,26 @@ supervisor.monitor(producer)
 
 a = Consumer.new
 producer.register(a)
-a.spawn
+supervisor.monitor(a)
 
 b = Consumer.new
 producer.register(b)
-b.spawn
+supervisor.monitor(b)
 
 Signal::INT.trap { supervisor.stop }
 supervisor.start
 ```
 
-Now if the producer crashes, it will be restarted. You can test this by adding a
-random `raise "chaos monkey"` into the `Producer#call` loop. The error will be
-logged, the producer restarted and the application continue running.
+The supervisor will start in the current fiber, and spawn a fiber for each of
+the supervised actor: `producer`, `a` and `b`. If any of the actors crashes, the
+error will be logged, the actor be restarted and the application will continue
+to run.
 
 #### Pool
 
 The `Earl::Pool(A, M)` agent spawns a fixed size list of agents of type `A`, to
 which we can dispatch messages (of type `M`). Messages are delivered to a single
-worker of the pool in an exactly-once manner. This is different from
-`Earl::Registry` that broadcasts a message to all registered agents.
+worker of the pool in an exactly-once manner.
 
 Whenever a worker agent crashes, the pool will recycle and restart it. A worker
 can stop normally, but it should only do so when asked to stop.

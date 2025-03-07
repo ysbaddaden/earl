@@ -10,10 +10,6 @@ Earl agents are a set of modules that can be mixed into classes:
 
   Extension module, adds a mailbox to an agent;
 
-- [`Earl::Registry`](#earlregistry)
-
-  A registry object to broadcast messages to other agents, stop them, and more;
-
 - [`Earl::Artist`](#earlartist)
 
   Agent module with a mailbox and automatic dispatch of received messages
@@ -325,70 +321,6 @@ printer.start
 # => 3
 ```
 
-### Earl::Registry
-
-The `Earl::Registry(A, M)` class keeps a list of agents. Its a generic and both
-the type of agents to register, `A`, and messages to send them, `M`, must be
-specified. Registered agents `A` must also be agents, thus include
-[`Earl::Agent`](#earlagent), and must be capable to receive messages of type
-`M`. I.e. include [`Earl::Mailbox(M)`](#earlmailbox) or be an
-[`Earl::Artist(M)`](#earlartist).
-
-The registry maintains a list of registered agents. The registry object is
-concurrency safe. Agents can register and unregister at any time, while messages
-are being broadcasted. That being said, the registry is optimized for infrequent
-agent (un)registration but frequent iterations (e.g. frequently broadcasted
-messages).
-
-The registry should be stopped when the main agent stops. This will prevent any
-further interaction with the registry: agents can't register, be iterated, and
-messages can't be bent sent anymore.
-
-The registry object has the following methods:
-
-- `#register(agent)`
-
-Registers an *agent*, so it will start receiving messages sent after its
-registration. If the registry is being closed, trying to register an agent will
-raise an `Earl::ClosedError` exception, preventing the agent to be registered.
-
-- `#unregister(agent)`
-
-Unregisters a previously registered *agent*, so it won't receive messages
-anymore. Due to concurrency conditions, the agent may still receive a few
-messages until the agent is indeed unregistered. If the registry is being
-closed, then this is a noop.
-
-- `#each(&block)`
-
-Iterates previously registered agents.
-
-- `#send(message)`
-
-Broadcasts a *message* to all previously registered agents in an exactly-once
-manner. If an agent registers itself while messages are being sent, it will only
-receive later messages, the ones sent after it registered.
-
-If the registry is closed, an `Earl::ClosedError` exception will be raised, and
-the message won't be sent.
-
-If delivering a message to a registered agent fails (i.e. an exception is
-raised) the agent will be silently unregistered from the registry. The likely
-reason is the agent's mailbox is closed.
-
-- `#stop`
-
-Asks all registered agents to stop by invoking their `#stop` method. If an agent
-tries to register itself, then it will also be asked to stop, or an exception
-will be raised.
-
-If the registry is closed, an `Earl::ClosedError` exception will be raised, and
-registered agents won't be stopped.
-
-- `#closed?`
-
-Returns `true` if the registry has been stopped.
-
 #### Example
 
 ```ruby
@@ -404,23 +336,19 @@ class Producer
   include Earl::Artist(Int32)
 
   def initialize
-    @registry = Earl::Registry(Consumer, Int32).new
+    @consumers = [] of Consumer
   end
 
-  def register(agent)
-    @registry.register(agent)
+  def register(consumer)
+    @consumers.add(consumer)
   end
 
   def unregister(agent)
-    @registry.unregister(agent)
+    @consumers.delete(agent)
   end
 
   def call(number)
-    @registry.send(number)
-  end
-
-  def terminate
-    @registry.stop
+    @consumers.each(&.send(number))
   end
 end
 
