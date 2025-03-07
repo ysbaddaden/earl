@@ -3,7 +3,6 @@ require "./application"
 require "./artist"
 require "./mailbox"
 require "./pool"
-require "./registry"
 require "./supervisor"
 require "./logger"
 
