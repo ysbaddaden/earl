@@ -78,7 +78,6 @@ module Earl
       supervisor.monitor(agent)
       supervisor.spawn
 
-      # eventually { assert supervisor.stopping? }
       eventually { assert supervisor.stopped? }
     end
   end

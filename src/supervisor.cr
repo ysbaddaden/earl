@@ -39,7 +39,7 @@ module Earl
       getter agent : Agent
 
       def initialize(@agent, intensity)
-        @restarts = Deque(Time::Span).new(intensity)
+        @restarts = Deque(Time::Span).new
       end
 
       def ==(other : Agent)
