@@ -23,7 +23,13 @@ module Earl
   class Pool(A, M)
     include Artist(M)
 
-    def initialize(@capacity : Int32)
+    @new_agent : Proc(A)
+
+    def self.new(capacity : Int32)
+      new(capacity) { A.new }
+    end
+
+    def initialize(@capacity : Int32, &@new_agent : Proc(A))
       @workers = Array(A).new(@capacity)
       @mutex = Mutex.new(:unchecked)
       @group = WaitGroup.new(@capacity)
@@ -34,7 +40,7 @@ module Earl
     def call
       @capacity.times do
         ::spawn do
-          agent = A.new
+          agent = @new_agent.call
           @mutex.synchronize { @workers << agent }
 
           while agent.starting?
