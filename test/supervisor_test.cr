@@ -55,7 +55,7 @@ module Earl
 
     def test_recycles_supervised_agents
       agent = Noop.new(monkey: true)
-      supervisor = Supervisor.new
+      supervisor = Supervisor.new(intensity: 5, period: 1.nanosecond)
 
       supervisor.monitor(agent)
       assert supervisor.starting?
@@ -64,11 +64,21 @@ module Earl
       supervisor.spawn
       eventually { assert supervisor.running? }
 
-      10.times do
+      1000.times do
         eventually { refute agent.crashed? }
       end
 
       supervisor.stop
+    end
+
+    def test_shutdown_when_reaching_restart_intensity
+      agent = Noop.new(monkey: true)
+
+      supervisor = Supervisor.new(intensity: 2, period: 1.minute)
+      supervisor.monitor(agent)
+      supervisor.spawn
+
+      eventually { assert supervisor.stopped? }
     end
   end
 end
